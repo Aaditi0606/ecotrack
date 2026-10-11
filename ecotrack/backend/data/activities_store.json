@@ -1,0 +1,47 @@
+[
+  {
+    "_id": "c0d9c41a69a564e667989f16",
+    "activityType": "reusable_bottle",
+    "activityDate": "2026-10-11T00:00:00.000Z",
+    "quantity": 4,
+    "description": "Refilled stainless steel bottle in campus canteen",
+    "createdAt": "2026-10-11T15:26:02.127Z",
+    "updatedAt": "2026-10-11T15:26:02.127Z"
+  },
+  {
+    "_id": "82008cff20dfb0f9f96631ba",
+    "activityType": "cycling_walking",
+    "activityDate": "2026-10-10T00:00:00.000Z",
+    "quantity": 6.5,
+    "description": "Walked to engineering building and cycled to grocery market",
+    "createdAt": "2026-10-11T15:26:02.174Z",
+    "updatedAt": "2026-10-11T15:26:02.174Z"
+  },
+  {
+    "_id": "2a13d89de851d02f981d31ef",
+    "activityType": "public_transport",
+    "activityDate": "2026-10-09T00:00:00.000Z",
+    "quantity": 14,
+    "description": "Commuted by municipal electric bus instead of driving a car",
+    "createdAt": "2026-10-11T15:26:02.196Z",
+    "updatedAt": "2026-10-11T15:26:02.196Z"
+  },
+  {
+    "_id": "19d218d23ed307a4d2aa3ca2",
+    "activityType": "tree_care",
+    "activityDate": "2026-10-06T00:00:00.000Z",
+    "quantity": 1,
+    "description": "Watered newly planted sapling outside campus student center",
+    "createdAt": "2026-10-11T15:26:02.218Z",
+    "updatedAt": "2026-10-11T15:26:02.218Z"
+  },
+  {
+    "_id": "c12ac324d93904f305cf4ab5",
+    "activityType": "reusable_bottle",
+    "activityDate": "2026-10-11T00:00:00.000Z",
+    "quantity": 3,
+    "description": "Refilled stainless steel bottle in canteen",
+    "createdAt": "2026-10-11T15:41:53.505Z",
+    "updatedAt": "2026-10-11T15:41:53.505Z"
+  }
+]

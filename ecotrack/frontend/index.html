@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EcoTrack — Personal Sustainability Tracker</title>
+  <meta name="description" content="Track your everyday sustainable habits, measure your estimated environmental impact, and build greener daily routines with EcoTrack.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🌿</text></svg>">
+</head>
+<body>
+
+  <!-- Toast Notification Container -->
+  <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- Header & Navigation -->
+  <header class="app-header">
+    <div class="header-container">
+      <a href="#home" class="brand-link" aria-label="EcoTrack Home">
+        <span class="brand-icon">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z"></path>
+            <path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"></path>
+          </svg>
+        </span>
+        <span class="brand-title">EcoTrack</span>
+      </a>
+
+      <button id="mobile-menu-toggle" class="mobile-toggle" aria-expanded="false" aria-controls="main-nav" aria-label="Toggle navigation menu">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      <nav id="main-nav" class="app-nav" aria-label="Main Navigation">
+        <ul class="nav-links">
+          <li><a href="#home" class="nav-link">Home</a></li>
+          <li><a href="#dashboard" class="nav-link">Dashboard</a></li>
+          <li><a href="#progress" class="nav-link">Progress</a></li>
+          <li><a href="#about" class="nav-link">About</a></li>
+        </ul>
+        <div class="header-cta">
+          <a href="#log-activity" class="btn btn-primary btn-header">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="12" y1="5" x2="12" y2="19"></line>
+              <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            <span>Log an Activity</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <div class="content-wrapper">
+
+      <!-- Section A: Home / Hero Section -->
+      <section id="home" class="hero-section" aria-labelledby="hero-heading">
+        <div class="hero-text-col">
+          <div class="hero-badge">
+            <span class="badge-dot"></span>
+            Personal Sustainability Tracker
+          </div>
+          <h1 id="hero-heading" class="hero-title">Small Actions.<br><span class="hero-accent">Greener Future.</span></h1>
+          <p class="hero-lead">
+            Every conscious choice counts. Track your everyday sustainable habits, measure your estimated environmental footprint reduction, and build habits that nurture our planet.
+          </p>
+          <div class="hero-actions">
+            <a href="#log-activity" class="btn btn-primary btn-lg">
+              <span>Start Tracking</span>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+                <polyline points="12 5 19 12 12 19"></polyline>
+              </svg>
+            </a>
+            <a href="#about" class="btn btn-outline btn-lg">How It Works</a>
+          </div>
+
+          <div class="hero-highlights">
+            <div class="highlight-item">
+              <span class="highlight-icon">🌱</span>
+              <span>5 Core Eco Habits</span>
+            </div>
+            <div class="highlight-item">
+              <span class="highlight-icon">🔬</span>
+              <span>Python/Flask Analytics</span>
+            </div>
+            <div class="highlight-item">
+              <span class="highlight-icon">🍃</span>
+              <span>100% Transparent Estimates</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="hero-visual-col" aria-hidden="true">
+          <div class="eco-illustration-card">
+            <div class="eco-circle-bg"></div>
+            <svg class="eco-hero-graphic" viewBox="0 0 280 280" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Soft background gradient circle -->
+              <circle cx="140" cy="140" r="110" fill="#EBF2EC" />
+              <circle cx="140" cy="140" r="90" fill="#DCE7E1" />
+              <!-- Stylized Tree & Leaf Stem -->
+              <path d="M140 210V100" stroke="#1E4620" stroke-width="7" stroke-linecap="round" />
+              <!-- Primary Leaf -->
+              <path d="M140 100C140 100 175 90 185 125C195 160 140 175 140 175" fill="#5A8264" />
+              <path d="M140 135C140 135 105 125 95 155C85 185 140 195 140 195" fill="#366838" />
+              <!-- Sprout tips -->
+              <path d="M140 100C140 60 160 45 170 45C170 65 155 90 140 100Z" fill="#D4A338" />
+              <path d="M140 100C140 65 120 48 110 50C110 70 125 92 140 100Z" fill="#5A8264" />
+              <!-- Soil / Earth Arc -->
+              <ellipse cx="140" cy="216" rx="55" ry="12" fill="#D0DDD5" />
+            </svg>
+            <div class="floating-tag tag-top">
+              <span class="tag-emoji">💧</span>
+              <span>Bottles Diverted</span>
+            </div>
+            <div class="floating-tag tag-bottom">
+              <span class="tag-emoji">🚲</span>
+              <span>Zero-Emission Commute</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section B: Dashboard Overview -->
+      <section id="dashboard" class="dashboard-section" aria-labelledby="dashboard-heading">
+        <div class="section-header">
+          <div class="section-title-wrap">
+            <h2 id="dashboard-heading" class="section-title">Dashboard Overview</h2>
+            <p class="section-subtitle">Real-time summary of your verified sustainability contributions</p>
+          </div>
+          <div class="dashboard-badge-wrap">
+            <span id="impact-engine-badge" class="engine-badge engine-flask" title="Microservice connection status">Flask Microservice</span>
+          </div>
+        </div>
+
+        <!-- Empty state prompt banner if no activities recorded yet -->
+        <div id="empty-dashboard-banner" class="empty-banner" style="display: none;">
+          <div class="empty-banner-icon">🌿</div>
+          <div class="empty-banner-content">
+            <p class="empty-banner-heading">Ready to begin your eco-tracking journey?</p>
+            <p class="empty-banner-text">You haven't recorded any sustainable activities yet. Fill in the quick form below to log your first action!</p>
+          </div>
+          <a href="#log-activity" class="btn btn-sm btn-primary">Log First Action</a>
+        </div>
+
+        <!-- 3 Summary Cards -->
+        <div class="summary-cards-grid">
+          <!-- Card 1: Total Activities -->
+          <article class="summary-card" aria-labelledby="stat-card-1-label">
+            <div class="card-icon-bubble bubble-primary">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 2v20"></path>
+                <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
+              </svg>
+            </div>
+            <div class="card-content">
+              <span id="stat-card-1-label" class="card-label">Total Activities</span>
+              <div class="card-metric-value" id="stat-total-activities">0</div>
+              <span class="card-metric-desc">Lifetime eco actions recorded</span>
+            </div>
+          </article>
+
+          <!-- Card 2: This Week -->
+          <article class="summary-card" aria-labelledby="stat-card-2-label">
+            <div class="card-icon-bubble bubble-accent">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="16" y1="2" x2="16" y2="6"></line>
+                <line x1="8" y1="2" x2="8" y2="6"></line>
+                <line x1="3" y1="10" x2="21" y2="10"></line>
+              </svg>
+            </div>
+            <div class="card-content">
+              <span id="stat-card-2-label" class="card-label">This Week</span>
+              <div class="card-metric-value" id="stat-this-week">0</div>
+              <span class="card-metric-desc">Activities logged in past 7 days</span>
+            </div>
+          </article>
+
+          <!-- Card 3: Estimated Environmental Impact -->
+          <article class="summary-card" aria-labelledby="stat-card-3-label">
+            <div class="card-icon-bubble bubble-green">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="m4.93 4.93 4.24 4.24"></path>
+                <path d="m14.83 9.17 4.24-4.24"></path>
+                <path d="m14.83 14.83 4.24 4.24"></path>
+                <path d="m9.17 14.83-4.24 4.24"></path>
+              </svg>
+            </div>
+            <div class="card-content">
+              <span id="stat-card-3-label" class="card-label">Estimated Impact</span>
+              <div class="card-metric-value" id="stat-impact-co2">0.00 kg</div>
+              <span class="card-metric-desc" id="stat-impact-sub">CO₂e emissions avoided</span>
+            </div>
+          </article>
+        </div>
+      </section>
+
+      <!-- Main Two-Column Layout: Log Form & Recent Activities -->
+      <div class="dashboard-main-grid">
+
+        <!-- Section C: Log an Eco-Friendly Activity Form -->
+        <section id="log-activity" class="form-section card-box" aria-labelledby="form-heading">
+          <div class="card-box-header">
+            <div class="icon-header-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </div>
+            <div>
+              <h2 id="form-heading" class="card-box-title">Log an Eco-Friendly Activity</h2>
+              <p class="card-box-desc">Record your sustainable action to update your progress</p>
+            </div>
+          </div>
+
+          <!-- Inline Form Error / Status Banner -->
+          <div id="form-feedback" class="form-feedback" style="display: none;" role="alert"></div>
+
+          <form id="activity-form" class="activity-form" novalidate>
+            <!-- 1. Activity Type -->
+            <div class="form-group">
+              <label for="activity-type" class="form-label">
+                Activity Type <span class="required-asterisk">*</span>
+              </label>
+              <div class="select-wrapper">
+                <select id="activity-type" name="activityType" class="form-input form-select" required>
+                  <option value="reusable_bottle">💧 Reusable Bottle (avoided single-use plastic)</option>
+                  <option value="public_transport">🚌 Public Transport (bus, train, or metro)</option>
+                  <option value="cycling_walking">🚲 Cycling or Walking (active zero-emission commute)</option>
+                  <option value="waste_segregation">♻️ Waste Segregation (sorting & composting)</option>
+                  <option value="tree_care">🌱 Tree-Care Activity (nurturing or planting)</option>
+                </select>
+              </div>
+            </div>
+
+            <!-- 2. Date of Activity -->
+            <div class="form-group">
+              <label for="activity-date" class="form-label">
+                Date of Activity <span class="required-asterisk">*</span>
+              </label>
+              <input 
+                type="date" 
+                id="activity-date" 
+                name="activityDate" 
+                class="form-input" 
+                required 
+                aria-describedby="date-help"
+              >
+              <span id="date-help" class="form-help">Select today or a past date (future dates are rejected)</span>
+            </div>
+
+            <!-- 3. Quantity or Count -->
+            <div class="form-group">
+              <label for="activity-quantity" class="form-label">
+                Quantity or Count <span class="required-asterisk">*</span>
+              </label>
+              <div class="input-with-unit">
+                <input 
+                  type="number" 
+                  id="activity-quantity" 
+                  name="quantity" 
+                  class="form-input" 
+                  min="1" 
+                  step="1" 
+                  value="1" 
+                  placeholder="e.g. 2" 
+                  required
+                >
+                <span id="quantity-unit-label" class="unit-badge">single-use bottles avoided</span>
+              </div>
+            </div>
+
+            <!-- 4. Optional Description -->
+            <div class="form-group">
+              <div class="label-with-counter">
+                <label for="activity-description" class="form-label">
+                  Short Description <span class="optional-label">(Optional)</span>
+                </label>
+                <span id="char-count" class="char-counter">0/200</span>
+              </div>
+              <textarea 
+                id="activity-description" 
+                name="description" 
+                class="form-input form-textarea" 
+                rows="3" 
+                maxlength="200" 
+                placeholder="e.g. Refilled my stainless steel bottle 3 times in campus canteen"
+              ></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-actions">
+              <button type="submit" id="submit-btn" class="btn btn-primary btn-block">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                <span>Save Activity</span>
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <!-- Section D: Recent Activities -->
+        <section id="recent-activities" class="recent-section card-box" aria-labelledby="recent-heading">
+          <div class="card-box-header">
+            <div class="icon-header-badge">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <circle cx="12" cy="12" r="10"></circle>
+                <polyline points="12 6 12 12 16 14"></polyline>
+              </svg>
+            </div>
+            <div class="header-with-count">
+              <div>
+                <h2 id="recent-heading" class="card-box-title">Recent Activities</h2>
+                <p class="card-box-desc">Your latest logged eco actions</p>
+              </div>
+              <span id="activities-count-badge" class="count-pill">0</span>
+            </div>
+          </div>
+
+          <!-- Dynamic Activities List Container -->
+          <div id="activities-list" class="activities-list" aria-live="polite">
+            <!-- Loading placeholder -->
+            <div class="loading-state">
+              <span class="spinner"></span>
+              <p>Loading activity records...</p>
+            </div>
+          </div>
+        </section>
+
+      </div>
+
+      <!-- Section E: Sustainability Progress -->
+      <section id="progress" class="progress-section card-box" aria-labelledby="progress-heading">
+        <div class="card-box-header">
+          <div class="icon-header-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <line x1="18" y1="20" x2="18" y2="10"></line>
+              <line x1="12" y1="20" x2="12" y2="4"></line>
+              <line x1="6" y1="20" x2="6" y2="14"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 id="progress-heading" class="card-box-title">Sustainability Progress</h2>
+            <p class="card-box-desc">Weekly consistency tracker based on real activity logs</p>
+          </div>
+        </div>
+
+        <div class="progress-chart-card">
+          <div id="chart-container" class="chart-container">
+            <!-- Dynamic SVG Chart rendered via TypeScript -->
+          </div>
+          
+          <!-- Category breakdown strip -->
+          <div class="habit-breakdown-wrapper">
+            <h3 class="breakdown-title">Habit Distribution & Impact</h3>
+            <div id="habit-breakdown" class="habit-breakdown-grid"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section F: About EcoTrack -->
+      <section id="about" class="about-section card-box" aria-labelledby="about-heading">
+        <div class="card-box-header">
+          <div class="icon-header-badge">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 id="about-heading" class="card-box-title">About EcoTrack</h2>
+            <p class="card-box-desc">Understanding our approach, technology, and estimation science</p>
+          </div>
+        </div>
+
+        <div class="about-grid">
+          <article class="about-card">
+            <div class="about-icon">🌱</div>
+            <h3 class="about-card-title">Why Everyday Habits Matter</h3>
+            <p class="about-card-text">
+              Large global environmental challenges often feel overwhelming. However, individual habits—such as refilling a reusable bottle, taking the bus, or separating compostable waste—collectively divert thousands of pounds of trash and significantly lower daily fossil fuel consumption.
+            </p>
+          </article>
+
+          <article class="about-card">
+            <div class="about-icon">🎯</div>
+            <h3 class="about-card-title">How EcoTrack Helps You</h3>
+            <p class="about-card-text">
+              EcoTrack provides a straightforward, zero-friction interface for students and individuals to log daily sustainable choices. By viewing real-time streaks and aggregated metrics, users stay motivated and develop permanent environmentally responsible routines.
+            </p>
+          </article>
+
+          <article class="about-card">
+            <div class="about-icon">📊</div>
+            <h3 class="about-card-title">Transparent Impact Estimates</h3>
+            <p class="about-card-text">
+              Our calculations are powered by a dedicated <strong>Python Flask calculation microservice</strong> using published benchmarks from the <strong>US EPA WARM</strong> and <strong>UK DEFRA</strong> life-cycle models. We treat every habit uniquely and clearly label all figures as educational estimates rather than certified carbon offsets.
+            </p>
+          </article>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Section G: Footer -->
+  <footer class="app-footer">
+    <div class="footer-container">
+      <div class="footer-top-row">
+        <div class="footer-brand">
+          <div class="footer-logo">
+            <span class="footer-icon">🌿</span>
+            <span class="footer-title">EcoTrack</span>
+          </div>
+          <p class="footer-tagline">Small Actions. Greener Future.</p>
+        </div>
+
+        <nav class="footer-nav" aria-label="Footer Navigation">
+          <a href="#home">Home</a>
+          <a href="#dashboard">Dashboard</a>
+          <a href="#log-activity">Log Activity</a>
+          <a href="#progress">Progress</a>
+          <a href="#about">About</a>
+        </nav>
+      </div>
+
+      <div class="footer-divider"></div>
+
+      <div class="footer-bottom-row">
+        <p class="footer-disclaimer">
+          <strong>Methodology Note:</strong> Environmental impact values are educational estimations calculated via our Python/Flask engine based on published lifecycle assessments. They do not constitute certified regulatory carbon credits.
+        </p>
+        <p class="footer-copyright">
+          &copy; 2026 EcoTrack — Personal Sustainability Tracker. Built with HTML5, CSS3, TypeScript, Node.js, Flask &amp; MongoDB.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Confirmation Modal for Delete Action -->
+  <div id="delete-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+    <div class="modal-box">
+      <div class="modal-header">
+        <span class="modal-icon">⚠️</span>
+        <h3 id="delete-modal-title" class="modal-title">Confirm Deletion</h3>
+      </div>
+      <p id="delete-modal-text" class="modal-body">
+        Are you sure you want to delete this activity record? This action cannot be undone.
+      </p>
+      <div class="modal-actions">
+        <button type="button" id="cancel-delete-btn" class="btn btn-outline">Cancel</button>
+        <button type="button" id="confirm-delete-btn" class="btn btn-danger">Delete Activity</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Compiled TypeScript Frontend Controller -->
+  <script type="module" src="dist/main.js"></script>
+</body>
+</html>

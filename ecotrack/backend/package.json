@@ -1,0 +1,28 @@
+{
+  "name": "ecotrack-backend",
+  "version": "1.0.0",
+  "description": "Node.js & Express REST API for EcoTrack Sustainability Tracker",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "sustainability",
+    "tracker",
+    "express",
+    "mongoose",
+    "flask"
+  ],
+  "author": "EcoTrack Team",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2",
+    "mongoose": "^8.9.5"
+  },
+  "devDependencies": {
+    "mongodb-memory-server": "^10.1.3"
+  }
+}

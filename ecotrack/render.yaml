@@ -1,0 +1,29 @@
+services:
+  # 1. Python Flask Calculation Microservice
+  - type: web
+    name: ecotrack-flask-service
+    env: python
+    rootDir: ecotrack/flask-service
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: python app.py
+    envVars:
+      - key: FLASK_PORT
+        value: 10000
+
+  # 2. Node.js Express Application Server & Frontend
+  - type: web
+    name: ecotrack-web
+    env: node
+    rootDir: ecotrack/backend
+    plan: free
+    buildCommand: npm install && cd ../frontend && npx typescript --project tsconfig.json
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: FLASK_SERVICE_URL
+        fromService:
+          type: web
+          name: ecotrack-flask-service
+          property: host

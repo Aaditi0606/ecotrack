@@ -1,0 +1,16 @@
+{
+  "name": "ecotrack-app",
+  "version": "1.0.0",
+  "description": "EcoTrack — Personal Sustainability Tracker Website",
+  "main": "ecotrack/backend/server.js",
+  "scripts": {
+    "install:all": "npm --prefix ecotrack/backend install && pip install -r ecotrack/flask-service/requirements.txt",
+    "build": "cd ecotrack/backend && npm install && cd ../frontend && npx typescript --project tsconfig.json",
+    "start": "node ecotrack/backend/server.js",
+    "start:backend": "cd ecotrack/backend && npm start",
+    "start:flask": "python ecotrack/flask-service/app.py",
+    "test": "node ecotrack/backend/test-api.js"
+  },
+  "author": "Aaditi",
+  "license": "ISC"
+}

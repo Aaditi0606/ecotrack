@@ -1,0 +1,13 @@
+{
+  "name": "ecotrack",
+  "version": "1.0.0",
+  "description": "EcoTrack — Personal Sustainability Tracker Website",
+  "scripts": {
+    "build:frontend": "cd frontend && npx typescript --project tsconfig.json",
+    "start:backend": "cd backend && npm start",
+    "start:flask": "python flask-service/app.py",
+    "test:api": "node backend/test-api.js"
+  },
+  "author": "EcoTrack Team",
+  "license": "ISC"
+}
