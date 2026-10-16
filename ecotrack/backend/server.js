@@ -11,6 +11,10 @@ const { FLASK_SERVICE_URL } = require('./services/impactService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+console.log(
+  '[MongoDB] MONGODB_URI environment variable exists:',
+  Boolean(process.env.MONGODB_URI)
+);
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ecotrack';
 
 // Middleware
@@ -113,7 +117,7 @@ async function ensureFlaskServiceRunning() {
       });
 
       const cleanup = () => {
-        try { flaskProcess.kill(); } catch {}
+        try { flaskProcess.kill(); } catch { }
       };
       process.on('exit', cleanup);
       process.on('SIGINT', () => { cleanup(); process.exit(); });
