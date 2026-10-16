@@ -24,6 +24,22 @@ async function runTests() {
     }
   }
 
+  // 0. Test URI Masking Helper (Prevents Credential Leakage)
+  await assert('maskMongoUri safely masks credentials', async () => {
+    const app = require('./server');
+    const mask = app.maskMongoUri;
+    if (typeof mask !== 'function') throw new Error('maskMongoUri is not exported');
+
+    const testUri1 = 'mongodb+srv://adminUser:MySecretPassword123@cluster0.mongodb.net/ecotrack?retryWrites=true';
+    const masked1 = mask(testUri1);
+    if (masked1.includes('MySecretPassword123')) throw new Error('Password was not masked in Atlas URI');
+    if (!masked1.startsWith('mongodb+srv://adminUser:*****@cluster0.mongodb.net/')) throw new Error(`Unexpected masked format: ${masked1}`);
+
+    const testUri2 = 'mongodb://127.0.0.1:27017/ecotrack';
+    const masked2 = mask(testUri2);
+    if (masked2 !== testUri2) throw new Error(`Unexpected change to passwordless URI: ${masked2}`);
+  });
+
   // 1. Test Flask calculation service directly
   await assert('Flask Service /health endpoint', async () => {
     const res = await fetch(`${FLASK_URL}/health`);
@@ -51,11 +67,23 @@ async function runTests() {
   });
 
   // 2. Test Node.js /api/health
-  await assert('Node.js /api/health endpoint', async () => {
+  await assert('Node.js /api/health endpoint returns clear database status', async () => {
     const res = await fetch(`${BASE_URL}/api/health`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
     if (data.status !== 'ok') throw new Error(`Expected status 'ok', got ${data.status}`);
+    if (!data.database || typeof data.database.connected !== 'boolean') {
+      throw new Error('Health check missing database.connected boolean');
+    }
+    if (!data.database.engine || !data.database.status) {
+      throw new Error('Health check missing database engine or status description');
+    }
+    if (data.database.maskedUri && data.database.maskedUri.includes(':') && data.database.maskedUri.includes('@')) {
+      const match = data.database.maskedUri.match(/:\/\/[^:]+:([^@]+)@/);
+      if (match && match[1] !== '*****') {
+        throw new Error('Raw database password detected in health endpoint!');
+      }
+    }
   });
 
   // 3. Test Dashboard endpoint
@@ -127,6 +155,37 @@ async function runTests() {
     if (!found) throw new Error(`Created activity ${createdId} not found in list`);
   });
 
+  // 7.1 Test Activity Update (PUT)
+  await assert('PUT /api/activities/:id updates record', async () => {
+    if (!createdId) throw new Error('No created record to update');
+    const res = await fetch(`${BASE_URL}/api/activities/${createdId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quantity: 18,
+        description: 'Updated metro trip description'
+      })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success || json.data.quantity !== 18 || json.data.description !== 'Updated metro trip description') {
+      throw new Error(`Update verification failed: ${JSON.stringify(json)}`);
+    }
+  });
+
+  // 7.2 Test Activity Update Validation Rejection
+  await assert('PUT /api/activities/:id rejects invalid quantity', async () => {
+    if (!createdId) throw new Error('No created record to test');
+    const res = await fetch(`${BASE_URL}/api/activities/${createdId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quantity: -5
+      })
+    });
+    if (res.status !== 400) throw new Error(`Expected 400, got ${res.status}`);
+  });
+
   // 8. Test Node-to-Flask pass-through calculation
   await assert('POST /api/dashboard/impact/calculate calculates impact', async () => {
     const res = await fetch(`${BASE_URL}/api/dashboard/impact/calculate`, {
@@ -151,6 +210,18 @@ async function runTests() {
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = await res.json();
     if (!json.success) throw new Error('Failed to delete');
+  });
+
+  // 10. Test Idempotent Data Migration
+  await assert('migrateFallbackDataToMongo is safe and idempotent', async () => {
+    const { migrateFallbackDataToMongo } = require('./models/Activity');
+    const result1 = await migrateFallbackDataToMongo();
+    if (!result1 || typeof result1 !== 'object') throw new Error('Invalid migration return value');
+    // Running second time must not create duplicates
+    const result2 = await migrateFallbackDataToMongo();
+    if (result2.migrated > 0) {
+      throw new Error(`Second migration run inserted duplicate records: ${result2.migrated}`);
+    }
   });
 
   console.log('\n======================================================');

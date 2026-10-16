@@ -3,17 +3,36 @@ const cors = require('cors');
 const path = require('path');
 const { spawn } = require('child_process');
 const mongoose = require('mongoose');
-require('dotenv').config({ path: path.join(__dirname, '../.env') });
+const dotenv = require('dotenv');
 
+// Load environment variables from parent and current directories without overriding existing variables
+dotenv.config({ path: path.join(__dirname, '../.env') });
+dotenv.config({ path: path.join(__dirname, '.env') });
+
+const { Activity, migrateFallbackDataToMongo } = require('./models/Activity');
 const activitiesRouter = require('./routes/activities');
 const dashboardRouter = require('./routes/dashboard');
 const { FLASK_SERVICE_URL } = require('./services/impactService');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+/**
+ * Safely masks database credentials from MongoDB connection URI
+ */
+function maskMongoUri(uri) {
+  if (!uri || typeof uri !== 'string') return '';
+  try {
+    return uri.replace(/(mongodb(?:\+srv)?:\/\/[^:]+:)([^@]+)(@.+)/, '$1*****$3');
+  } catch {
+    return 'mongodb://[credentials masked]';
+  }
+}
+
+const hasCustomMongoUri = Boolean(process.env.MONGODB_URI);
 console.log(
-  '[MongoDB] MONGODB_URI environment variable exists:',
-  Boolean(process.env.MONGODB_URI)
+  '[MongoDB] MONGODB_URI environment variable configured:',
+  hasCustomMongoUri
 );
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/ecotrack';
 
@@ -40,8 +59,11 @@ app.use('/api/dashboard', dashboardRouter);
 
 // System Health Check
 app.get('/api/health', async (req, res) => {
-  const isMongoConnected = mongoose.connection.readyState === 1;
-  const dbStatus = isMongoConnected ? 'connected (Mongoose / MongoDB)' : 'active (embedded file persistence fallback)';
+  const readyState = mongoose.connection.readyState;
+  const isMongoConnected = readyState === 1;
+  const dbStatus = isMongoConnected
+    ? 'connected (Mongoose / MongoDB Atlas)'
+    : 'active (embedded file persistence fallback)';
   let flaskStatus = 'unknown';
 
   try {
@@ -51,13 +73,23 @@ app.get('/api/health', async (req, res) => {
     flaskStatus = 'offline (Node fallback calculations active)';
   }
 
+  let activityCount = 0;
+  try {
+    activityCount = await Activity.countDocuments();
+  } catch {
+    activityCount = 0;
+  }
+
   return res.status(200).json({
     status: 'ok',
     service: 'EcoTrack Node.js/Express Server',
     database: {
-      engine: isMongoConnected ? 'MongoDB' : 'Fallback File/Memory Store',
+      connected: isMongoConnected,
+      readyState,
+      engine: isMongoConnected ? 'MongoDB (Mongoose / Atlas)' : 'Fallback File/Memory Store',
       status: dbStatus,
-      connectionString: isMongoConnected ? MONGODB_URI : 'Local persistence active'
+      maskedUri: maskMongoUri(MONGODB_URI),
+      activityCount
     },
     microservice: {
       name: 'Python/Flask Calculation Engine',
@@ -131,19 +163,41 @@ async function ensureFlaskServiceRunning() {
   }
 }
 
+// Mongoose connection lifecycle listeners
+mongoose.connection.on('connected', () => {
+  console.log('✅ [MongoDB] Connection established successfully.');
+});
+mongoose.connection.on('error', (err) => {
+  console.warn('⚠️ [MongoDB] Runtime connection error:', err.message);
+});
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ [MongoDB] Connection disconnected.');
+});
+
 // Database Connection & Server Startup
 async function startServer() {
   // Ensure Flask service is ready
   await ensureFlaskServiceRunning();
 
+  const maskedUri = maskMongoUri(MONGODB_URI);
+  // Allow up to 30s when a remote connection string is configured (for Atlas SRV/TLS)
+  const timeoutMs = hasCustomMongoUri ? 30000 : 3000;
+
   try {
-    console.log(`[MongoDB] Attempting connection to ${MONGODB_URI}...`);
+    console.log(`[MongoDB] Attempting connection to ${maskedUri} (timeout: ${timeoutMs / 1000}s)...`);
     await mongoose.connect(MONGODB_URI, {
-      serverSelectionTimeoutMS: 2000
+      serverSelectionTimeoutMS: timeoutMs,
+      connectTimeoutMS: timeoutMs
     });
     console.log('✅ [MongoDB] Connected successfully to live MongoDB instance via Mongoose.');
+
+    // Safely migrate existing JSON data to MongoDB if collection is currently empty
+    await migrateFallbackDataToMongo();
   } catch (err) {
-    console.warn(`⚠️ [MongoDB] Live MongoDB server not reachable at ${MONGODB_URI} (${err.message}).`);
+    console.warn(`⚠️ [MongoDB] Live MongoDB server not reachable at ${maskedUri} (${err.message}).`);
+    if (hasCustomMongoUri) {
+      console.warn('💡 [MongoDB Atlas Tip] Ensure 0.0.0.0/0 is added in MongoDB Atlas -> Security -> Network Access, and your database username/password in MONGODB_URI are correct.');
+    }
     console.log('ℹ️ [MongoDB] Activating zero-config embedded persistence store so EcoTrack works immediately without setup.');
     console.log('💡 [MongoDB] To connect to a live MongoDB server, start mongod or set MONGODB_URI in your .env file.');
   }
@@ -162,6 +216,10 @@ async function startServer() {
   });
 }
 
-startServer();
+if (require.main === module) {
+  startServer();
+}
+
+app.maskMongoUri = maskMongoUri;
 
 module.exports = app;

@@ -150,6 +150,31 @@ const ActivityFallback = {
     return newDoc;
   },
 
+  async findById(id) {
+    const all = loadFallbackData();
+    const item = all.find((a) => a._id === id);
+    return item || null;
+  },
+
+  async findByIdAndUpdate(id, updateData, options = {}) {
+    const all = loadFallbackData();
+    const idx = all.findIndex((a) => a._id === id);
+    if (idx === -1) return null;
+
+    const current = all[idx];
+    const updated = {
+      ...current,
+      ...(updateData.activityType !== undefined && { activityType: updateData.activityType }),
+      ...(updateData.activityDate !== undefined && { activityDate: new Date(updateData.activityDate).toISOString() }),
+      ...(updateData.quantity !== undefined && { quantity: Number(updateData.quantity) }),
+      ...(updateData.description !== undefined && { description: updateData.description }),
+      updatedAt: new Date().toISOString()
+    };
+    all[idx] = updated;
+    saveFallbackData(all);
+    return options.new === false ? current : updated;
+  },
+
   async findByIdAndDelete(id) {
     const all = loadFallbackData();
     const idx = all.findIndex((item) => item._id === id);
@@ -172,21 +197,132 @@ const ActivityFallback = {
   }
 };
 
-// Activity proxy dynamically delegates to Mongoose when connected, or Fallback when disconnected
-const Activity = new Proxy(
-  {},
-  {
-    get(target, prop) {
-      if (mongoose.connection.readyState === 1) {
-        return MongooseActivity[prop];
-      }
-      return ActivityFallback[prop];
-    }
+/**
+ * Safely import existing JSON records into MongoDB Atlas without duplicating.
+ * Preserves original IDs, dates, quantities, descriptions, and timestamps.
+ * Idempotent: safe to run multiple times. Non-destructive to activities_store.json.
+ */
+async function migrateFallbackDataToMongo() {
+  if (mongoose.connection.readyState !== 1) {
+    return { migrated: 0, reason: 'mongo_not_connected' };
   }
-);
+
+  try {
+    const records = loadFallbackData();
+    if (!Array.isArray(records) || records.length === 0) {
+      return { migrated: 0, reason: 'no_records_in_store' };
+    }
+
+    let insertedCount = 0;
+    let existingCount = 0;
+
+    for (const r of records) {
+      const doc = {
+        activityType: r.activityType,
+        activityDate: new Date(r.activityDate),
+        quantity: Number(r.quantity),
+        description: r.description || ''
+      };
+
+      let filter;
+      if (r._id && /^[0-9a-fA-F]{24}$/.test(r._id)) {
+        const objectId = new mongoose.Types.ObjectId(r._id);
+        filter = { _id: objectId };
+        doc._id = objectId;
+      } else {
+        filter = {
+          activityType: r.activityType,
+          activityDate: new Date(r.activityDate),
+          quantity: Number(r.quantity)
+        };
+      }
+
+      if (r.createdAt) doc.createdAt = new Date(r.createdAt);
+      if (r.updatedAt) doc.updatedAt = new Date(r.updatedAt);
+
+      const result = await MongooseActivity.updateOne(
+        filter,
+        { $setOnInsert: doc },
+        { upsert: true }
+      );
+
+      if (result.upsertedCount > 0) {
+        insertedCount++;
+      } else {
+        existingCount++;
+      }
+    }
+
+    if (insertedCount > 0) {
+      console.log(`✅ [Migration] Safely imported ${insertedCount} existing activity records into MongoDB Atlas (${existingCount} already present).`);
+    } else {
+      console.log(`ℹ️ [Migration] All ${existingCount} JSON records are already present in MongoDB Atlas.`);
+    }
+
+    return { migrated: insertedCount, alreadyExisting: existingCount };
+  } catch (err) {
+    console.warn('⚠️ [Migration] Error during record import:', err.message);
+    return { migrated: 0, error: err.message };
+  }
+}
+
+/**
+ * Unified Activity Data Access Layer.
+ * Explicitly dispatches to Mongoose when connected or Fallback store when offline.
+ * Avoids any Proxy constructor binding pitfalls.
+ */
+const Activity = {
+  find(filter = {}, projection = null, options = {}) {
+    if (mongoose.connection.readyState === 1) {
+      return MongooseActivity.find(filter, projection, options);
+    }
+    return ActivityFallback.find(filter, projection);
+  },
+
+  async create(doc) {
+    if (mongoose.connection.readyState === 1) {
+      const instance = new MongooseActivity(doc);
+      return await instance.save();
+    }
+    return await ActivityFallback.create(doc);
+  },
+
+  async findById(id) {
+    if (mongoose.connection.readyState === 1) {
+      return await MongooseActivity.findById(id);
+    }
+    return await ActivityFallback.findById(id);
+  },
+
+  async findByIdAndUpdate(id, updateData, options = {}) {
+    if (mongoose.connection.readyState === 1) {
+      return await MongooseActivity.findByIdAndUpdate(id, updateData, options);
+    }
+    return await ActivityFallback.findByIdAndUpdate(id, updateData, options);
+  },
+
+  async findByIdAndDelete(id) {
+    if (mongoose.connection.readyState === 1) {
+      return await MongooseActivity.findByIdAndDelete(id);
+    }
+    return await ActivityFallback.findByIdAndDelete(id);
+  },
+
+  async countDocuments(filter = {}) {
+    if (mongoose.connection.readyState === 1) {
+      return await MongooseActivity.countDocuments(filter);
+    }
+    return await ActivityFallback.countDocuments(filter);
+  }
+};
 
 module.exports = {
   Activity,
   MongooseActivity,
-  ALLOWED_ACTIVITY_TYPES
+  ActivityFallback,
+  migrateFallbackDataToMongo,
+  loadFallbackData,
+  ALLOWED_ACTIVITY_TYPES,
+  DATA_FILE
 };
+

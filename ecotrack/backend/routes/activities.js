@@ -143,6 +143,128 @@ router.post('/', async (req, res) => {
 });
 
 /**
+ * PUT /api/activities/:id
+ * Update an existing eco-friendly activity record
+ */
+router.put('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id) && !/^[0-9a-fA-F]{24}$/.test(id)) {
+      return res.status(400).json({
+        success: false,
+        error: 'Invalid activity record ID format.'
+      });
+    }
+
+    const { activityType, activityDate, quantity, description } = req.body;
+    const updates = {};
+
+    if (activityType !== undefined) {
+      if (typeof activityType !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Activity type must be text.'
+        });
+      }
+      const trimmedType = activityType.trim();
+      if (!ALLOWED_ACTIVITY_TYPES.includes(trimmedType)) {
+        return res.status(400).json({
+          success: false,
+          error: `Invalid activity type '${trimmedType}'. Allowed: ${ALLOWED_ACTIVITY_TYPES.join(', ')}`
+        });
+      }
+      updates.activityType = trimmedType;
+    }
+
+    if (quantity !== undefined) {
+      const numQuantity = Number(quantity);
+      if (isNaN(numQuantity) || numQuantity <= 0) {
+        return res.status(400).json({
+          success: false,
+          error: 'Quantity must be a positive number greater than 0.'
+        });
+      }
+      updates.quantity = numQuantity;
+    }
+
+    if (activityDate !== undefined) {
+      const parsedDate = new Date(activityDate);
+      if (isNaN(parsedDate.getTime())) {
+        return res.status(400).json({
+          success: false,
+          error: 'Activity date is not a valid date.'
+        });
+      }
+      const maxAllowedDate = new Date();
+      maxAllowedDate.setDate(maxAllowedDate.getDate() + 1);
+      if (parsedDate > maxAllowedDate) {
+        return res.status(400).json({
+          success: false,
+          error: 'Activity date cannot be in the future.'
+        });
+      }
+      updates.activityDate = parsedDate;
+    }
+
+    if (description !== undefined && description !== null) {
+      if (typeof description !== 'string') {
+        return res.status(400).json({
+          success: false,
+          error: 'Description must be text.'
+        });
+      }
+      const cleanDescription = description.trim();
+      if (cleanDescription.length > 200) {
+        return res.status(400).json({
+          success: false,
+          error: 'Description cannot exceed 200 characters.'
+        });
+      }
+      updates.description = cleanDescription;
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: 'No valid fields provided for update.'
+      });
+    }
+
+    const updated = await Activity.findByIdAndUpdate(id, updates, {
+      new: true,
+      runValidators: true
+    });
+
+    if (!updated) {
+      return res.status(404).json({
+        success: false,
+        error: 'Activity record not found.'
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Activity updated successfully.',
+      data: updated
+    });
+  } catch (error) {
+    console.error('Error updating activity:', error);
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map((e) => e.message);
+      return res.status(400).json({
+        success: false,
+        error: messages.join('; ')
+      });
+    }
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to update activity record.'
+    });
+  }
+});
+
+/**
  * DELETE /api/activities/:id
  * Delete a selected activity by ID
  */
