@@ -1,47 +1,72 @@
 [
   {
     "_id": "c0d9c41a69a564e667989f16",
-    "activityType": "reusable_bottle",
+    "__v": 0,
     "activityDate": "2026-10-11T00:00:00.000Z",
-    "quantity": 4,
-    "description": "Refilled stainless steel bottle in campus canteen",
+    "activityType": "reusable_bottle",
     "createdAt": "2026-10-11T15:26:02.127Z",
+    "description": "Refilled stainless steel bottle in campus canteen",
+    "quantity": 4,
     "updatedAt": "2026-10-11T15:26:02.127Z"
   },
   {
     "_id": "82008cff20dfb0f9f96631ba",
-    "activityType": "cycling_walking",
+    "__v": 0,
     "activityDate": "2026-10-10T00:00:00.000Z",
-    "quantity": 6.5,
-    "description": "Walked to engineering building and cycled to grocery market",
+    "activityType": "cycling_walking",
     "createdAt": "2026-10-11T15:26:02.174Z",
+    "description": "Walked to engineering building and cycled to grocery market",
+    "quantity": 6.5,
     "updatedAt": "2026-10-11T15:26:02.174Z"
   },
   {
     "_id": "2a13d89de851d02f981d31ef",
-    "activityType": "public_transport",
+    "__v": 0,
     "activityDate": "2026-10-09T00:00:00.000Z",
-    "quantity": 14,
-    "description": "Commuted by municipal electric bus instead of driving a car",
+    "activityType": "public_transport",
     "createdAt": "2026-10-11T15:26:02.196Z",
+    "description": "Commuted by municipal electric bus instead of driving a car",
+    "quantity": 14,
     "updatedAt": "2026-10-11T15:26:02.196Z"
   },
   {
     "_id": "19d218d23ed307a4d2aa3ca2",
-    "activityType": "tree_care",
+    "__v": 0,
     "activityDate": "2026-10-06T00:00:00.000Z",
-    "quantity": 1,
-    "description": "Watered newly planted sapling outside campus student center",
+    "activityType": "tree_care",
     "createdAt": "2026-10-11T15:26:02.218Z",
+    "description": "Watered newly planted sapling outside campus student center",
+    "quantity": 1,
     "updatedAt": "2026-10-11T15:26:02.218Z"
   },
   {
     "_id": "c12ac324d93904f305cf4ab5",
-    "activityType": "reusable_bottle",
+    "__v": 0,
     "activityDate": "2026-10-11T00:00:00.000Z",
-    "quantity": 3,
-    "description": "Refilled stainless steel bottle in canteen",
+    "activityType": "reusable_bottle",
     "createdAt": "2026-10-11T15:41:53.505Z",
+    "description": "Refilled stainless steel bottle in canteen",
+    "quantity": 3,
     "updatedAt": "2026-10-11T15:41:53.505Z"
+  },
+  {
+    "_id": "6ad327ed89b34ffb5ba7a675",
+    "activityType": "waste_segregation",
+    "activityDate": "2026-10-17T00:00:00.000Z",
+    "quantity": 3,
+    "description": "",
+    "createdAt": "2026-10-17T07:46:53.665Z",
+    "updatedAt": "2026-10-17T07:46:53.665Z",
+    "__v": 0
+  },
+  {
+    "_id": "6ad3287b89b34ffb5ba7a67b",
+    "activityType": "public_transport",
+    "activityDate": "2026-10-17T00:00:00.000Z",
+    "quantity": 3,
+    "description": "",
+    "createdAt": "2026-10-17T07:49:15.616Z",
+    "updatedAt": "2026-10-17T07:49:15.616Z",
+    "__v": 0
   }
 ]
