@@ -1,8 +1,10 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const { Activity, ALLOWED_ACTIVITY_TYPES } = require('../models/Activity');
+const { optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
+router.use(optionalAuth);
 
 /**
  * GET /api/activities
@@ -113,13 +115,20 @@ router.post('/', async (req, res) => {
       }
     }
 
-    // Create activity in MongoDB
-    const newActivity = await Activity.create({
+    const activityDoc = {
       activityType: trimmedType,
       activityDate: parsedDate,
       quantity: numQuantity,
       description: cleanDescription
-    });
+    };
+
+    if (req.user) {
+      activityDoc.userId = req.user.id;
+      activityDoc.username = req.user.username;
+    }
+
+    // Create activity in MongoDB
+    const newActivity = await Activity.create(activityDoc);
 
     return res.status(201).json({
       success: true,

@@ -45,6 +45,29 @@
           <li><a href="#about" class="nav-link">About</a></li>
         </ul>
         <div class="header-cta">
+          <!-- User Authentication Widget -->
+          <div id="auth-nav-container" class="auth-nav-container">
+            <button type="button" id="open-auth-btn" class="btn btn-outline btn-auth" aria-label="Sign In or Register">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+              <span>Sign In</span>
+            </button>
+            <div id="user-profile-badge" class="user-profile-badge" style="display: none;">
+              <span class="user-avatar" id="user-avatar-initials">U</span>
+              <span class="user-name" id="user-display-name">User</span>
+              <button type="button" id="signout-btn" class="btn-signout" title="Sign Out" aria-label="Sign Out">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                  <polyline points="16 17 21 12 16 7"></polyline>
+                  <line x1="21" y1="12" x2="9" y2="12"></line>
+                </svg>
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+
           <a href="#log-activity" class="btn btn-primary btn-header">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
               <line x1="12" y1="5" x2="12" y2="19"></line>
@@ -448,7 +471,166 @@
         </p>
       </div>
     </div>
-  </footer>
+  <!-- User Authentication Modal (Sign In / Create Account) -->
+  <div id="auth-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
+    <div class="modal-box auth-modal-box">
+      <div class="modal-header auth-modal-header">
+        <div class="auth-title-group">
+          <span class="auth-header-icon">🌿</span>
+          <h3 id="auth-modal-title" class="modal-title">EcoTrack Account</h3>
+        </div>
+        <button type="button" id="close-auth-modal-btn" class="modal-close-btn" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <!-- Auth Tabs: Sign In vs Create Account -->
+      <div class="auth-tabs" role="tablist" aria-label="Authentication Options">
+        <button type="button" id="tab-signin-btn" class="auth-tab active" role="tab" aria-selected="true" aria-controls="signin-form-wrapper">
+          Sign In
+        </button>
+        <button type="button" id="tab-register-btn" class="auth-tab" role="tab" aria-selected="false" aria-controls="register-form-wrapper">
+          Create Account
+        </button>
+      </div>
+
+      <!-- Inline Feedback Alert -->
+      <div id="auth-feedback" class="auth-feedback" style="display: none;" role="alert"></div>
+
+      <!-- Tab 1: Sign In Form -->
+      <div id="signin-form-wrapper" class="auth-tab-content active" role="tabpanel">
+        <form id="signin-form" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="signin-username" class="form-label">Username</label>
+            <div class="input-with-icon">
+              <span class="input-icon">👤</span>
+              <input 
+                type="text" 
+                id="signin-username" 
+                name="username" 
+                class="form-input" 
+                placeholder="Enter your username" 
+                autocomplete="username" 
+                required
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="signin-password" class="form-label">Password</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🔒</span>
+              <input 
+                type="password" 
+                id="signin-password" 
+                name="password" 
+                class="form-input" 
+                placeholder="Enter your password" 
+                autocomplete="current-password" 
+                required
+              >
+              <button type="button" class="btn-toggle-password" data-target="signin-password" aria-label="Show password">👁️</button>
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="signin-submit-btn" class="btn btn-primary btn-block">
+              <span>Sign In</span>
+            </button>
+          </div>
+
+          <p class="auth-switch-text">
+            Don't have an account? 
+            <button type="button" id="switch-to-register-link" class="link-btn">Create one for free</button>
+          </p>
+        </form>
+      </div>
+
+      <!-- Tab 2: Create Account Form -->
+      <div id="register-form-wrapper" class="auth-tab-content" role="tabpanel" style="display: none;">
+        <form id="register-form" class="auth-form" novalidate>
+          <div class="form-group">
+            <label for="register-username" class="form-label">Choose a Username <span class="required-asterisk">*</span></label>
+            <div class="input-with-icon">
+              <span class="input-icon">👤</span>
+              <input 
+                type="text" 
+                id="register-username" 
+                name="username" 
+                class="form-input" 
+                placeholder="e.g. green_hero" 
+                autocomplete="username" 
+                required
+                minlength="3"
+                maxlength="30"
+              >
+            </div>
+            <span class="form-help">3–30 characters (letters, numbers, underscores)</span>
+          </div>
+
+          <div class="form-group">
+            <label for="register-displayname" class="form-label">Your Name (optional)</label>
+            <div class="input-with-icon">
+              <span class="input-icon">🏷️</span>
+              <input 
+                type="text" 
+                id="register-displayname" 
+                name="displayName" 
+                class="form-input" 
+                placeholder="e.g. Alex Green" 
+                autocomplete="name"
+                maxlength="50"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="register-password" class="form-label">Password <span class="required-asterisk">*</span></label>
+            <div class="input-with-icon">
+              <span class="input-icon">🔒</span>
+              <input 
+                type="password" 
+                id="register-password" 
+                name="password" 
+                class="form-input" 
+                placeholder="At least 6 characters" 
+                autocomplete="new-password" 
+                required
+                minlength="6"
+              >
+              <button type="button" class="btn-toggle-password" data-target="register-password" aria-label="Show password">👁️</button>
+            </div>
+            <span class="form-help">Minimum 6 characters</span>
+          </div>
+
+          <div class="form-group">
+            <label for="register-confirm-password" class="form-label">Confirm Password <span class="required-asterisk">*</span></label>
+            <div class="input-with-icon">
+              <span class="input-icon">🔒</span>
+              <input 
+                type="password" 
+                id="register-confirm-password" 
+                name="confirmPassword" 
+                class="form-input" 
+                placeholder="Repeat your password" 
+                autocomplete="new-password" 
+                required
+              >
+            </div>
+          </div>
+
+          <div class="form-actions">
+            <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block">
+              <span>Create Account</span>
+            </button>
+          </div>
+
+          <p class="auth-switch-text">
+            Already have an account? 
+            <button type="button" id="switch-to-signin-link" class="link-btn">Sign in here</button>
+          </p>
+        </form>
+      </div>
+    </div>
+  </div>
 
   <!-- Confirmation Modal for Delete Action -->
   <div id="delete-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">

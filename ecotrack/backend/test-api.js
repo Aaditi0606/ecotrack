@@ -224,6 +224,50 @@ async function runTests() {
     }
   });
 
+  // 11. Test User Authentication (Register, Login, Me, Duplicate Rejection)
+  let authToken = null;
+  const testUser = `user_${Date.now()}`;
+  await assert('POST /api/auth/register creates new user account', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: testUser, password: 'password123', displayName: 'Test Runner' })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success || !json.token) throw new Error('Registration failed');
+    authToken = json.token;
+  });
+
+  await assert('POST /api/auth/login validates credentials and issues token', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: testUser, password: 'password123' })
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success || !json.token) throw new Error('Login failed');
+  });
+
+  await assert('GET /api/auth/me returns current user profile with valid token', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/me`, {
+      headers: { 'Authorization': `Bearer ${authToken}` }
+    });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const json = await res.json();
+    if (!json.success || json.user.username !== testUser) throw new Error('Me profile mismatch');
+  });
+
+  await assert('POST /api/auth/register rejects duplicate username', async () => {
+    const res = await fetch(`${BASE_URL}/api/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: testUser, password: 'password123' })
+    });
+    if (res.status !== 409) throw new Error(`Expected 409, got ${res.status}`);
+  });
+
   console.log('\n======================================================');
   console.log(`🏁 Test Results: ${passed} passed, ${failed} failed`);
   console.log('======================================================\n');

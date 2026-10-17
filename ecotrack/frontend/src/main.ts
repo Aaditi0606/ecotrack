@@ -3,10 +3,17 @@ import {
   ActivityType,
   ACTIVITY_META,
   ApiResponse,
-  DashboardData
+  DashboardData,
+  User,
+  AuthResponse
 } from './types.js';
 
 // --- Application State ---
+const AUTH_TOKEN_KEY = 'ecotrack_auth_token';
+const AUTH_USER_KEY = 'ecotrack_auth_user';
+
+let currentUser: User | null = null;
+let authToken: string | null = null;
 let isSubmitting = false;
 let pendingDeleteId: string | null = null;
 
@@ -38,6 +45,20 @@ function getTodayDateString(): string {
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const day = String(now.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+/**
+ * Returns authorization headers if user is logged in
+ */
+function getAuthHeaders(includeContentType = true): HeadersInit {
+  const headers: Record<string, string> = {};
+  if (includeContentType) {
+    headers['Content-Type'] = 'application/json';
+  }
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return headers;
 }
 
 /**
@@ -92,6 +113,37 @@ const charCountSpan = document.getElementById('char-count') as HTMLSpanElement;
 const submitBtn = document.getElementById('submit-btn') as HTMLButtonElement;
 const formFeedback = document.getElementById('form-feedback') as HTMLDivElement;
 
+// Auth Header Elements
+const openAuthBtn = document.getElementById('open-auth-btn') as HTMLButtonElement | null;
+const userProfileBadge = document.getElementById('user-profile-badge') as HTMLElement | null;
+const userAvatarInitials = document.getElementById('user-avatar-initials') as HTMLElement | null;
+const userDisplayName = document.getElementById('user-display-name') as HTMLElement | null;
+const signoutBtn = document.getElementById('signout-btn') as HTMLButtonElement | null;
+
+// Auth Modal Elements
+const authModal = document.getElementById('auth-modal') as HTMLElement | null;
+const closeAuthModalBtn = document.getElementById('close-auth-modal-btn') as HTMLButtonElement | null;
+const tabSigninBtn = document.getElementById('tab-signin-btn') as HTMLButtonElement | null;
+const tabRegisterBtn = document.getElementById('tab-register-btn') as HTMLButtonElement | null;
+const authFeedback = document.getElementById('auth-feedback') as HTMLDivElement | null;
+
+const signinFormWrapper = document.getElementById('signin-form-wrapper') as HTMLElement | null;
+const registerFormWrapper = document.getElementById('register-form-wrapper') as HTMLElement | null;
+
+const signinForm = document.getElementById('signin-form') as HTMLFormElement | null;
+const signinUsername = document.getElementById('signin-username') as HTMLInputElement | null;
+const signinPassword = document.getElementById('signin-password') as HTMLInputElement | null;
+const signinSubmitBtn = document.getElementById('signin-submit-btn') as HTMLButtonElement | null;
+const switchToRegisterLink = document.getElementById('switch-to-register-link') as HTMLButtonElement | null;
+
+const registerForm = document.getElementById('register-form') as HTMLFormElement | null;
+const registerUsername = document.getElementById('register-username') as HTMLInputElement | null;
+const registerDisplayName = document.getElementById('register-displayname') as HTMLInputElement | null;
+const registerPassword = document.getElementById('register-password') as HTMLInputElement | null;
+const registerConfirmPassword = document.getElementById('register-confirm-password') as HTMLInputElement | null;
+const registerSubmitBtn = document.getElementById('register-submit-btn') as HTMLButtonElement | null;
+const switchToSigninLink = document.getElementById('switch-to-signin-link') as HTMLButtonElement | null;
+
 // Summary Elements
 const statTotalActivities = document.getElementById('stat-total-activities') as HTMLElement;
 const statThisWeek = document.getElementById('stat-this-week') as HTMLElement;
@@ -120,7 +172,9 @@ const cancelDeleteBtn = document.getElementById('cancel-delete-btn') as HTMLButt
  */
 async function loadDashboard(): Promise<void> {
   try {
-    const response = await fetch('/api/dashboard');
+    const response = await fetch('/api/dashboard', {
+      headers: getAuthHeaders(false)
+    });
     if (!response.ok) {
       throw new Error(`Server returned HTTP ${response.status}`);
     }
@@ -230,6 +284,7 @@ function renderActivitiesList(activities: Activity[]): void {
           <div class="activity-details-col">
             <div class="activity-header-row">
               <span class="badge ${meta.badgeClass}">${escapeHtml(meta.label)}</span>
+              ${act.username ? `<span class="badge badge-user" title="Logged by ${escapeHtml(act.username)}">👤 ${escapeHtml(act.username)}</span>` : ''}
               <time class="activity-date" datetime="${act.activityDate}">${formatDate(act.activityDate)}</time>
             </div>
             <div class="activity-metric-row">
@@ -470,9 +525,7 @@ async function handleFormSubmit(event: Event): Promise<void> {
 
     const response = await fetch('/api/activities', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
+      headers: getAuthHeaders(true),
       body: JSON.stringify(payload)
     });
 
@@ -557,7 +610,8 @@ async function executeDeleteActivity(): Promise<void> {
 
   try {
     const res = await fetch(`/api/activities/${id}`, {
-      method: 'DELETE'
+      method: 'DELETE',
+      headers: getAuthHeaders(false)
     });
     const result = await res.json();
 
@@ -596,23 +650,264 @@ function initNavigation(): void {
   }
 }
 
+// --- Authentication Management ---
+
+function openAuthModal(initialTab: 'signin' | 'register' = 'signin'): void {
+  switchAuthTab(initialTab);
+  clearAuthFeedback();
+  if (authModal) {
+    authModal.classList.add('active');
+    authModal.setAttribute('aria-hidden', 'false');
+    if (initialTab === 'signin') {
+      signinUsername?.focus();
+    } else {
+      registerUsername?.focus();
+    }
+  }
+}
+
+function closeAuthModal(): void {
+  if (authModal) {
+    authModal.classList.remove('active');
+    authModal.setAttribute('aria-hidden', 'true');
+  }
+  clearAuthFeedback();
+}
+
+function switchAuthTab(tab: 'signin' | 'register'): void {
+  clearAuthFeedback();
+  if (tab === 'signin') {
+    tabSigninBtn?.classList.add('active');
+    tabSigninBtn?.setAttribute('aria-selected', 'true');
+    tabRegisterBtn?.classList.remove('active');
+    tabRegisterBtn?.setAttribute('aria-selected', 'false');
+
+    if (signinFormWrapper) signinFormWrapper.style.display = 'block';
+    if (registerFormWrapper) registerFormWrapper.style.display = 'none';
+  } else {
+    tabRegisterBtn?.classList.add('active');
+    tabRegisterBtn?.setAttribute('aria-selected', 'true');
+    tabSigninBtn?.classList.remove('active');
+    tabSigninBtn?.setAttribute('aria-selected', 'false');
+
+    if (signinFormWrapper) signinFormWrapper.style.display = 'none';
+    if (registerFormWrapper) registerFormWrapper.style.display = 'block';
+  }
+}
+
+function displayAuthFeedback(msg: string, type: 'error' | 'success' = 'error'): void {
+  if (!authFeedback) return;
+  authFeedback.className = `auth-feedback ${type}`;
+  authFeedback.innerHTML = `
+    <span>${type === 'error' ? '⚠️' : '✓'}</span>
+    <span>${escapeHtml(msg)}</span>
+  `;
+  authFeedback.style.display = 'flex';
+}
+
+function clearAuthFeedback(): void {
+  if (!authFeedback) return;
+  authFeedback.style.display = 'none';
+  authFeedback.innerHTML = '';
+}
+
+async function handleSignIn(e: Event): Promise<void> {
+  e.preventDefault();
+  const username = signinUsername?.value.trim() || '';
+  const password = signinPassword?.value || '';
+
+  if (!username) {
+    displayAuthFeedback('Please enter your username.', 'error');
+    signinUsername?.focus();
+    return;
+  }
+  if (!password) {
+    displayAuthFeedback('Please enter your password.', 'error');
+    signinPassword?.focus();
+    return;
+  }
+
+  if (signinSubmitBtn) {
+    signinSubmitBtn.disabled = true;
+    signinSubmitBtn.innerHTML = '<span>Signing In...</span>';
+  }
+
+  try {
+    const res = await fetch('/api/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+    const data: AuthResponse = await res.json();
+
+    if (!res.ok || !data.success || !data.token || !data.user) {
+      throw new Error(data.error || 'Failed to sign in.');
+    }
+
+    setSession(data.token, data.user);
+    closeAuthModal();
+    if (signinForm) signinForm.reset();
+    showToast(`Welcome back, ${data.user.displayName || data.user.username}!`, 'success');
+    await loadDashboard();
+  } catch (err: any) {
+    displayAuthFeedback(err.message || 'Invalid username or password.', 'error');
+  } finally {
+    if (signinSubmitBtn) {
+      signinSubmitBtn.disabled = false;
+      signinSubmitBtn.innerHTML = '<span>Sign In</span>';
+    }
+  }
+}
+
+async function handleRegister(e: Event): Promise<void> {
+  e.preventDefault();
+  const username = registerUsername?.value.trim() || '';
+  const displayName = registerDisplayName?.value.trim() || '';
+  const password = registerPassword?.value || '';
+  const confirmPassword = registerConfirmPassword?.value || '';
+
+  if (!username || username.length < 3) {
+    displayAuthFeedback('Username must be at least 3 characters.', 'error');
+    registerUsername?.focus();
+    return;
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+    displayAuthFeedback('Username can only contain letters, numbers, and underscores.', 'error');
+    registerUsername?.focus();
+    return;
+  }
+  if (!password || password.length < 6) {
+    displayAuthFeedback('Password must be at least 6 characters.', 'error');
+    registerPassword?.focus();
+    return;
+  }
+  if (password !== confirmPassword) {
+    displayAuthFeedback('Passwords do not match. Please re-enter.', 'error');
+    registerConfirmPassword?.focus();
+    return;
+  }
+
+  if (registerSubmitBtn) {
+    registerSubmitBtn.disabled = true;
+    registerSubmitBtn.innerHTML = '<span>Creating Account...</span>';
+  }
+
+  try {
+    const res = await fetch('/api/auth/register', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password, displayName })
+    });
+    const data: AuthResponse = await res.json();
+
+    if (!res.ok || !data.success || !data.token || !data.user) {
+      throw new Error(data.error || 'Failed to create account.');
+    }
+
+    setSession(data.token, data.user);
+    closeAuthModal();
+    if (registerForm) registerForm.reset();
+    showToast(`Account created! Welcome to EcoTrack, ${data.user.displayName || data.user.username}!`, 'success');
+    await loadDashboard();
+  } catch (err: any) {
+    displayAuthFeedback(err.message || 'Failed to create account.', 'error');
+  } finally {
+    if (registerSubmitBtn) {
+      registerSubmitBtn.disabled = false;
+      registerSubmitBtn.innerHTML = '<span>Create Account</span>';
+    }
+  }
+}
+
+function setSession(token: string, user: User): void {
+  authToken = token;
+  currentUser = user;
+  try {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+    localStorage.setItem(AUTH_USER_KEY, JSON.stringify(user));
+  } catch (e) {
+    console.warn('LocalStorage save error:', e);
+  }
+  updateAuthUI();
+}
+
+function handleSignOut(): void {
+  authToken = null;
+  currentUser = null;
+  try {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    localStorage.removeItem(AUTH_USER_KEY);
+  } catch { }
+  updateAuthUI();
+  showToast('You have been signed out.', 'info');
+  loadDashboard();
+}
+
+function updateAuthUI(): void {
+  if (currentUser) {
+    if (openAuthBtn) openAuthBtn.style.display = 'none';
+    if (userProfileBadge) {
+      userProfileBadge.style.display = 'inline-flex';
+      const name = currentUser.displayName || currentUser.username;
+      if (userDisplayName) userDisplayName.textContent = name;
+      if (userAvatarInitials) userAvatarInitials.textContent = name.charAt(0).toUpperCase();
+    }
+  } else {
+    if (openAuthBtn) openAuthBtn.style.display = 'inline-flex';
+    if (userProfileBadge) userProfileBadge.style.display = 'none';
+  }
+}
+
+function initSession(): void {
+  try {
+    const savedToken = localStorage.getItem(AUTH_TOKEN_KEY);
+    const savedUser = localStorage.getItem(AUTH_USER_KEY);
+    if (savedToken && savedUser) {
+      authToken = savedToken;
+      currentUser = JSON.parse(savedUser);
+      updateAuthUI();
+
+      // Verify token in background
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${savedToken}` }
+      }).then((res) => {
+        if (!res.ok) {
+          // Token expired or invalid
+          authToken = null;
+          currentUser = null;
+          localStorage.removeItem(AUTH_TOKEN_KEY);
+          localStorage.removeItem(AUTH_USER_KEY);
+          updateAuthUI();
+        }
+      }).catch(() => { });
+    } else {
+      updateAuthUI();
+    }
+  } catch {
+    updateAuthUI();
+  }
+}
+
 // --- Application Initialization ---
 
 function init(): void {
-  // 1. Initialize Date Input to Today and set max date constraint
+  // 1. Initialize user authentication state
+  initSession();
+
+  // 2. Initialize Date Input to Today and set max date constraint
   if (activityDateInput) {
     const todayStr = getTodayDateString();
     activityDateInput.value = todayStr;
     activityDateInput.max = todayStr;
   }
 
-  // 2. Initialize Activity Type dropdown listener
+  // 3. Initialize Activity Type dropdown listener
   if (activityTypeSelect) {
     activityTypeSelect.addEventListener('change', updateActivityTypeUI);
     updateActivityTypeUI();
   }
 
-  // 3. Description Character Counter
+  // 4. Description Character Counter
   if (activityDescInput && charCountSpan) {
     activityDescInput.addEventListener('input', () => {
       const len = activityDescInput.value.length;
@@ -625,12 +920,12 @@ function init(): void {
     });
   }
 
-  // 4. Activity Form Submission Listener
+  // 5. Activity Form Submission Listener
   if (activityForm) {
     activityForm.addEventListener('submit', handleFormSubmit);
   }
 
-  // 5. Delete Modal Listeners
+  // 6. Delete Modal Listeners
   if (confirmDeleteBtn) {
     confirmDeleteBtn.addEventListener('click', executeDeleteActivity);
   }
@@ -648,10 +943,57 @@ function init(): void {
     });
   }
 
-  // 6. Navigation
+  // 7. Auth Modal & Form Listeners
+  if (openAuthBtn) {
+    openAuthBtn.addEventListener('click', () => openAuthModal('signin'));
+  }
+  if (closeAuthModalBtn) {
+    closeAuthModalBtn.addEventListener('click', closeAuthModal);
+  }
+  if (authModal) {
+    authModal.addEventListener('click', (e) => {
+      if (e.target === authModal) closeAuthModal();
+    });
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && authModal.classList.contains('active')) {
+        closeAuthModal();
+      }
+    });
+  }
+
+  tabSigninBtn?.addEventListener('click', () => switchAuthTab('signin'));
+  tabRegisterBtn?.addEventListener('click', () => switchAuthTab('register'));
+  switchToRegisterLink?.addEventListener('click', () => switchAuthTab('register'));
+  switchToSigninLink?.addEventListener('click', () => switchAuthTab('signin'));
+
+  signinForm?.addEventListener('submit', handleSignIn);
+  registerForm?.addEventListener('submit', handleRegister);
+  signoutBtn?.addEventListener('click', handleSignOut);
+
+  // Password visibility toggle buttons
+  document.querySelectorAll<HTMLButtonElement>('.btn-toggle-password').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const targetId = btn.getAttribute('data-target');
+      if (!targetId) return;
+      const input = document.getElementById(targetId) as HTMLInputElement | null;
+      if (input) {
+        if (input.type === 'password') {
+          input.type = 'text';
+          btn.textContent = '🙈';
+          btn.setAttribute('aria-label', 'Hide password');
+        } else {
+          input.type = 'password';
+          btn.textContent = '👁️';
+          btn.setAttribute('aria-label', 'Show password');
+        }
+      }
+    });
+  });
+
+  // 8. Navigation
   initNavigation();
 
-  // 7. Initial Data Fetch
+  // 9. Initial Data Fetch
   loadDashboard();
 }
 

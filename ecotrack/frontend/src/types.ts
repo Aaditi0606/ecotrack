@@ -15,8 +15,24 @@ export interface Activity {
   activityDate: string;
   quantity: number;
   description?: string;
+  userId?: string | null;
+  username?: string;
   createdAt: string;
   updatedAt?: string;
+}
+
+export interface User {
+  id: string;
+  username: string;
+  displayName?: string;
+}
+
+export interface AuthResponse {
+  success: boolean;
+  message?: string;
+  error?: string;
+  token?: string;
+  user?: User;
 }
 
 export interface CreateActivityPayload {

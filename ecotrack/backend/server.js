@@ -12,6 +12,7 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const { Activity, migrateFallbackDataToMongo } = require('./models/Activity');
 const activitiesRouter = require('./routes/activities');
 const dashboardRouter = require('./routes/dashboard');
+const authRouter = require('./routes/auth');
 const { FLASK_SERVICE_URL } = require('./services/impactService');
 
 const app = express();
@@ -54,6 +55,7 @@ app.use((req, res, next) => {
 });
 
 // Mount REST API endpoints
+app.use('/api/auth', authRouter);
 app.use('/api/activities', activitiesRouter);
 app.use('/api/dashboard', dashboardRouter);
 

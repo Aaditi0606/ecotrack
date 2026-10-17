@@ -1,0 +1,20 @@
+[
+  {
+    "_id": "1af0d0a2132ee6e8bf438fbe",
+    "username": "testuser_1792230851648",
+    "displayName": "Test User",
+    "passwordHash": "74a01188265699496e9f44c8104668dfda84d592dd6ad149b6c292dae1c3441a016b1e0b94b159d661487bfc9b69300dd898a36def5e8f1a9123e517d6f5cf09",
+    "salt": "f49f9b0089574b37dcf22ee8808c4242",
+    "createdAt": "2026-10-17T09:54:11.804Z",
+    "updatedAt": "2026-10-17T09:54:11.805Z"
+  },
+  {
+    "_id": "a29045880df82e9e7d7fa4f1",
+    "username": "user_1792231366661",
+    "displayName": "Test Runner",
+    "passwordHash": "75715059a55b76e4e3e904f59f0d1ce11f8e1514093a1f87ea52639b613cba486a810cdcf9df7f7e820ba042eff330e9717fbcfe0b06805b6cdeb3c4acb369b7",
+    "salt": "ba117c1e182d64345591af7522383d21",
+    "createdAt": "2026-10-17T10:02:46.734Z",
+    "updatedAt": "2026-10-17T10:02:46.734Z"
+  }
+]

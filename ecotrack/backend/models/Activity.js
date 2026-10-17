@@ -55,6 +55,16 @@ const activitySchema = new mongoose.Schema(
     impact: {
       type: mongoose.Schema.Types.Mixed,
       default: undefined
+    },
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User',
+      default: null
+    },
+    username: {
+      type: String,
+      trim: true,
+      default: ''
     }
   },
   {
@@ -181,6 +191,8 @@ const ActivityFallback = {
       activityDate: new Date(doc.activityDate).toISOString(),
       quantity: Number(doc.quantity),
       description: doc.description || '',
+      userId: doc.userId || null,
+      username: doc.username || '',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString()
     };

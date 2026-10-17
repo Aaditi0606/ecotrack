@@ -1,8 +1,10 @@
 const express = require('express');
 const { Activity } = require('../models/Activity');
 const { calculateImpactFromFlask } = require('../services/impactService');
+const { optionalAuth } = require('../middleware/auth');
 
 const router = express.Router();
+router.use(optionalAuth);
 
 /**
  * Helper: generates array of last 7 calendar days with format { dateStr, label, count: 0 }
@@ -39,24 +41,28 @@ function getLast7DaysTemplate() {
  */
 router.get('/', async (req, res) => {
   try {
+    const userFilter = (req.query.userOnly === 'true' && req.user) ? { userId: req.user.id } : {};
+
     // 1. Fetch total activity count
-    const totalActivities = await Activity.countDocuments();
+    const totalActivities = await Activity.countDocuments(userFilter);
 
     // 2. Fetch "This Week" count (last 7 days)
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
     sevenDaysAgo.setHours(0, 0, 0, 0);
 
-    const thisWeekActivities = await Activity.countDocuments({
+    const weekFilter = {
+      ...userFilter,
       activityDate: { $gte: sevenDaysAgo }
-    });
+    };
+    const thisWeekActivities = await Activity.countDocuments(weekFilter);
 
     // 3. Fetch all activities for Flask calculation
-    const allActivities = await Activity.find({}, 'activityType quantity activityDate')
+    const allActivities = await Activity.find(userFilter, 'activityType quantity activityDate')
       .lean();
 
     // 4. Fetch recent 10 activities for list display
-    const recentActivities = await Activity.find({})
+    const recentActivities = await Activity.find(userFilter)
       .sort({ activityDate: -1, createdAt: -1 })
       .limit(10)
       .lean();

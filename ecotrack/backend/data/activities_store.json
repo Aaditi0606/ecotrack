@@ -68,5 +68,26 @@
     "createdAt": "2026-10-17T07:49:15.616Z",
     "updatedAt": "2026-10-17T07:49:15.616Z",
     "__v": 0
+  },
+  {
+    "_id": "190ee4e7171025839dd2f727",
+    "activityType": "public_transport",
+    "activityDate": "2026-10-17T00:00:00.000Z",
+    "quantity": 6,
+    "description": "Commute by public transport",
+    "createdAt": "2026-10-17T09:42:25.184Z",
+    "updatedAt": "2026-10-17T09:42:25.184Z",
+    "__v": 0
+  },
+  {
+    "_id": "1b72bfcfd862cd552433944c",
+    "activityType": "cycling_walking",
+    "activityDate": "2026-10-17T00:00:00.000Z",
+    "quantity": 2.5,
+    "description": "User test ride",
+    "userId": "1af0d0a2132ee6e8bf438fbe",
+    "username": "testuser_1792230851648",
+    "createdAt": "2026-10-17T09:54:11.983Z",
+    "updatedAt": "2026-10-17T09:54:11.983Z"
   }
 ]
