@@ -3,7 +3,24 @@
  * Acts as the bridge between Node.js and the Python Flask Environmental Calculation Microservice.
  */
 
-const FLASK_SERVICE_URL = process.env.FLASK_SERVICE_URL || 'http://127.0.0.1:5001';
+function formatServiceUrl(rawUrl, defaultPort = 5001) {
+  if (!rawUrl || typeof rawUrl !== 'string') return `http://127.0.0.1:${defaultPort}`;
+  let clean = rawUrl.trim().replace(/\/+$/, '');
+  if (!clean) return `http://127.0.0.1:${defaultPort}`;
+  if (!/^https?:\/\//i.test(clean)) {
+    if (clean.includes('.onrender.com')) {
+      clean = `https://${clean}`;
+    } else if (!clean.includes(':')) {
+      // Internal Render host like 'ecotrack-flask-service' without port
+      clean = `http://${clean}:10000`;
+    } else {
+      clean = `http://${clean}`;
+    }
+  }
+  return clean;
+}
+
+const FLASK_SERVICE_URL = formatServiceUrl(process.env.FLASK_SERVICE_URL);
 
 // Baseline fallback factors if Flask service is temporarily unreachable
 const FALLBACK_FACTORS = {

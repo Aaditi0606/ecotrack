@@ -38,7 +38,7 @@ const activitySchema = new mongoose.Schema(
     quantity: {
       type: Number,
       required: [true, 'Quantity or count is required'],
-      min: [1, 'Quantity must be at least 1'],
+      min: [0.01, 'Quantity must be a positive number'],
       validate: {
         validator: function (val) {
           return Number.isFinite(val) && val > 0;
@@ -51,10 +51,15 @@ const activitySchema = new mongoose.Schema(
       trim: true,
       maxlength: [200, 'Description cannot exceed 200 characters'],
       default: ''
+    },
+    impact: {
+      type: mongoose.Schema.Types.Mixed,
+      default: undefined
     }
   },
   {
-    timestamps: true
+    timestamps: true,
+    collection: 'activities'
   }
 );
 
@@ -65,13 +70,46 @@ activitySchema.index({ activityType: 1 });
 const MongooseActivity = mongoose.model('Activity', activitySchema);
 
 // --- 2. Seamless Fallback Adapter (Activates when local MongoDB daemon is not running) ---
-const DATA_FILE = path.join(__dirname, '../data/activities_store.json');
+const CANDIDATE_FILENAMES = ['activities_store.json', 'activity_store.json'];
+
+function findDataFilePath() {
+  const candidateDirs = [
+    path.join(__dirname, '../data'),
+    path.join(__dirname, '../../backend/data'),
+    path.join(process.cwd(), 'ecotrack/backend/data'),
+    path.join(process.cwd(), 'backend/data'),
+    path.join(process.cwd(), 'data')
+  ];
+
+  for (const dir of candidateDirs) {
+    for (const filename of CANDIDATE_FILENAMES) {
+      const fullPath = path.join(dir, filename);
+      try {
+        if (fs.existsSync(fullPath)) {
+          const stats = fs.statSync(fullPath);
+          if (stats.isFile() && stats.size > 2) {
+            return fullPath;
+          }
+        }
+      } catch { }
+    }
+  }
+
+  // Default path for read/write if no existing file with content is found
+  return path.join(__dirname, '../data/activities_store.json');
+}
+
+const DATA_FILE = findDataFilePath();
 
 function loadFallbackData() {
   try {
-    if (fs.existsSync(DATA_FILE)) {
-      const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-      return JSON.parse(raw);
+    const filePath = findDataFilePath();
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        return parsed;
+      }
     }
   } catch (err) {
     console.warn('[FallbackStore] Error reading store file:', err.message);
@@ -81,9 +119,10 @@ function loadFallbackData() {
 
 function saveFallbackData(data) {
   try {
-    const dir = path.dirname(DATA_FILE);
+    const filePath = findDataFilePath();
+    const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+    fs.writeFileSync(filePath, JSON.stringify(data, null, 2), 'utf-8');
   } catch (err) {
     console.warn('[FallbackStore] Error persisting data:', err.message);
   }
@@ -199,70 +238,105 @@ const ActivityFallback = {
 
 /**
  * Safely import existing JSON records into MongoDB Atlas without duplicating.
- * Preserves original IDs, dates, quantities, descriptions, and timestamps.
- * Idempotent: safe to run multiple times. Non-destructive to activities_store.json.
+ * Preserves original IDs, dates, quantities, descriptions, impact values, and timestamps.
+ * Idempotent: safe to run multiple times. Non-destructive to the source JSON file.
  */
 async function migrateFallbackDataToMongo() {
   if (mongoose.connection.readyState !== 1) {
-    return { migrated: 0, reason: 'mongo_not_connected' };
+    console.warn('[Migration] MongoDB is not connected (readyState != 1). Skipping automatic migration.');
+    return { success: false, migrated: 0, skipped: 0, reason: 'mongo_not_connected' };
   }
 
+  const filePath = findDataFilePath();
   try {
     const records = loadFallbackData();
     if (!Array.isArray(records) || records.length === 0) {
-      return { migrated: 0, reason: 'no_records_in_store' };
+      console.log(`ℹ️ [Migration] No activity records found to migrate in ${filePath}.`);
+      return { success: true, total: 0, migrated: 0, skipped: 0, errors: 0 };
     }
+
+    console.log(`[Migration] Starting safe import check for ${records.length} records from ${filePath}...`);
 
     let insertedCount = 0;
     let existingCount = 0;
+    let errorCount = 0;
 
     for (const r of records) {
-      const doc = {
-        activityType: r.activityType,
-        activityDate: new Date(r.activityDate),
-        quantity: Number(r.quantity),
-        description: r.description || ''
-      };
+      try {
+        const parsedDate = new Date(r.activityDate);
+        if (isNaN(parsedDate.getTime())) {
+          console.warn(`⚠️ [Migration] Skipping record with invalid date:`, r);
+          errorCount++;
+          continue;
+        }
 
-      let filter;
-      if (r._id && /^[0-9a-fA-F]{24}$/.test(r._id)) {
-        const objectId = new mongoose.Types.ObjectId(r._id);
-        filter = { _id: objectId };
-        doc._id = objectId;
-      } else {
-        filter = {
+        const qty = Number(r.quantity);
+        if (isNaN(qty) || qty <= 0) {
+          console.warn(`⚠️ [Migration] Skipping record with invalid quantity:`, r);
+          errorCount++;
+          continue;
+        }
+
+        const doc = {
           activityType: r.activityType,
-          activityDate: new Date(r.activityDate),
-          quantity: Number(r.quantity)
+          activityDate: parsedDate,
+          quantity: qty,
+          description: r.description || ''
         };
-      }
 
-      if (r.createdAt) doc.createdAt = new Date(r.createdAt);
-      if (r.updatedAt) doc.updatedAt = new Date(r.updatedAt);
+        if (r.impact !== undefined) {
+          doc.impact = r.impact;
+        }
 
-      const result = await MongooseActivity.updateOne(
-        filter,
-        { $setOnInsert: doc },
-        { upsert: true }
-      );
+        let filter;
+        if (r._id && /^[0-9a-fA-F]{24}$/.test(r._id)) {
+          const objectId = new mongoose.Types.ObjectId(r._id);
+          filter = { _id: objectId };
+          doc._id = objectId;
+        } else {
+          filter = {
+            activityType: r.activityType,
+            activityDate: parsedDate,
+            quantity: qty
+          };
+        }
 
-      if (result.upsertedCount > 0) {
-        insertedCount++;
-      } else {
-        existingCount++;
+        if (r.createdAt) doc.createdAt = new Date(r.createdAt);
+        if (r.updatedAt) doc.updatedAt = new Date(r.updatedAt);
+
+        const result = await MongooseActivity.updateOne(
+          filter,
+          { $setOnInsert: doc },
+          { upsert: true, timestamps: false }
+        );
+
+        if (result.upsertedCount > 0) {
+          insertedCount++;
+        } else {
+          existingCount++;
+        }
+      } catch (recErr) {
+        console.warn(`⚠️ [Migration] Error processing individual record:`, recErr.message);
+        errorCount++;
       }
     }
 
     if (insertedCount > 0) {
-      console.log(`✅ [Migration] Safely imported ${insertedCount} existing activity records into MongoDB Atlas (${existingCount} already present).`);
+      console.log(`✅ [Migration] Successfully imported ${insertedCount} new activity records into MongoDB Atlas (${existingCount} already present, ${errorCount} errors).`);
     } else {
-      console.log(`ℹ️ [Migration] All ${existingCount} JSON records are already present in MongoDB Atlas.`);
+      console.log(`ℹ️ [Migration] All ${existingCount} records from ${path.basename(filePath)} are already present in MongoDB Atlas (0 duplicates created).`);
     }
 
-    return { migrated: insertedCount, alreadyExisting: existingCount };
+    return {
+      success: true,
+      total: records.length,
+      migrated: insertedCount,
+      skipped: existingCount,
+      errors: errorCount
+    };
   } catch (err) {
-    console.warn('⚠️ [Migration] Error during record import:', err.message);
-    return { migrated: 0, error: err.message };
+    console.error('❌ [Migration] Error during record import sequence:', err.message);
+    return { success: false, migrated: 0, skipped: 0, error: err.message };
   }
 }
 
@@ -289,6 +363,7 @@ const Activity = {
 
   async findById(id) {
     if (mongoose.connection.readyState === 1) {
+      if (!mongoose.Types.ObjectId.isValid(id)) return null;
       return await MongooseActivity.findById(id);
     }
     return await ActivityFallback.findById(id);
@@ -296,6 +371,7 @@ const Activity = {
 
   async findByIdAndUpdate(id, updateData, options = {}) {
     if (mongoose.connection.readyState === 1) {
+      if (!mongoose.Types.ObjectId.isValid(id)) return null;
       return await MongooseActivity.findByIdAndUpdate(id, updateData, options);
     }
     return await ActivityFallback.findByIdAndUpdate(id, updateData, options);
@@ -303,6 +379,7 @@ const Activity = {
 
   async findByIdAndDelete(id) {
     if (mongoose.connection.readyState === 1) {
+      if (!mongoose.Types.ObjectId.isValid(id)) return null;
       return await MongooseActivity.findByIdAndDelete(id);
     }
     return await ActivityFallback.findByIdAndDelete(id);
@@ -322,6 +399,7 @@ module.exports = {
   ActivityFallback,
   migrateFallbackDataToMongo,
   loadFallbackData,
+  findDataFilePath,
   ALLOWED_ACTIVITY_TYPES,
   DATA_FILE
 };

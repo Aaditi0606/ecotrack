@@ -141,7 +141,7 @@ async function ensureFlaskServiceRunning() {
     try {
       const flaskProcess = spawn(pythonExe, [flaskScript], {
         stdio: 'inherit',
-        env: { ...process.env, FLASK_PORT: process.env.FLASK_PORT || '5001' }
+        env: { ...process.env, FLASK_PORT: process.env.FLASK_PORT || '5001', PORT: process.env.FLASK_PORT || '5001' }
       });
 
       flaskProcess.on('error', (err) => {

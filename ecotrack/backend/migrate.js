@@ -66,7 +66,8 @@ async function runMigration() {
 
     console.log('\n---------------- Migration Summary ----------------');
     console.log(`  - Newly Imported:     ${result.migrated}`);
-    console.log(`  - Already Existed:    ${result.alreadyExisting || 0}`);
+    console.log(`  - Already Existed:    ${result.skipped || result.alreadyExisting || 0}`);
+    console.log(`  - Errors:             ${result.errors || 0}`);
     console.log(`  - Total in Database:  ${afterCount}`);
     console.log('---------------------------------------------------');
     console.log('✅ Migration process completed cleanly.\n');

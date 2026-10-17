@@ -6,9 +6,9 @@ services:
     rootDir: ecotrack/flask-service
     plan: free
     buildCommand: pip install -r requirements.txt
-    startCommand: python app.py
+    startCommand: gunicorn --bind 0.0.0.0:$PORT app:app
     envVars:
-      - key: FLASK_PORT
+      - key: PORT
         value: 10000
 
   # 2. Node.js Express Application Server & Frontend
@@ -26,4 +26,4 @@ services:
         fromService:
           type: web
           name: ecotrack-flask-service
-          property: host
+          property: hostAndPort

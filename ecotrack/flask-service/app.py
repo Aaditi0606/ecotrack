@@ -103,6 +103,7 @@ def get_factors():
 
 
 if __name__ == "__main__":
-    port = int(os.environ.get("FLASK_PORT", 5001))
-    print(f"[EcoTrack Flask Service] Running on http://127.0.0.1:{port}")
-    app.run(host="127.0.0.1", port=port, debug=False)
+    host = os.environ.get("FLASK_HOST", "0.0.0.0")
+    port = int(os.environ.get("FLASK_PORT") or os.environ.get("PORT") or 5001)
+    print(f"[EcoTrack Flask Service] Running on http://{host}:{port}")
+    app.run(host=host, port=port, debug=False)
