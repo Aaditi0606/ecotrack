@@ -16,8 +16,227 @@
   <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container" aria-live="polite" aria-atomic="true"></div>
 
-  <!-- Header & Navigation -->
-  <header class="app-header">
+  <!-- =========================================================================
+       1. Dedicated Login & Registration Gateway View (Shown Before Main Page)
+       ========================================================================= -->
+  <div id="auth-gate-view" class="auth-gate-page">
+    <div class="auth-gate-wrapper">
+      
+      <!-- Left Column: EcoTrack Brand & Values -->
+      <div class="auth-gate-brand-col">
+        <div class="auth-gate-brand-header">
+          <div class="brand-badge-icon">🌿</div>
+          <h1 class="auth-gate-title">EcoTrack</h1>
+          <p class="auth-gate-tagline">Personal Sustainability Tracker</p>
+        </div>
+        <p class="auth-gate-description">
+          Log in to access your personal environmental dashboard, record conscious daily habits, and measure your science-backed carbon savings in real-time.
+        </p>
+
+        <div class="auth-gate-features">
+          <div class="auth-feature-card">
+            <span class="auth-feature-emoji">💧</span>
+            <div>
+              <strong class="auth-feature-title">Bottles & Transit</strong>
+              <p class="auth-feature-desc">Single-use plastic diverted and zero-emission commutes</p>
+            </div>
+          </div>
+          <div class="auth-feature-card">
+            <span class="auth-feature-emoji">🌱</span>
+            <div>
+              <strong class="auth-feature-title">Waste & Nature</strong>
+              <p class="auth-feature-desc">Waste segregation sessions and tree-care stewardship</p>
+            </div>
+          </div>
+          <div class="auth-feature-card">
+            <span class="auth-feature-emoji">☁️</span>
+            <div>
+              <strong class="auth-feature-title">MongoDB Atlas Cloud</strong>
+              <p class="auth-feature-desc">All your sustainable actions safely stored & synced 24/7</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="auth-gate-status-pill">
+          <span class="status-live-dot"></span>
+          <span>MongoDB Atlas Active • Cloud Ready</span>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Sign In / Register Card -->
+      <div class="auth-gate-form-col">
+        <div class="auth-card-box">
+          <div class="auth-card-header">
+            <h2 id="auth-gate-heading" class="auth-card-title">Welcome to EcoTrack</h2>
+            <p id="auth-gate-subheading" class="auth-card-desc">Sign in to your account or create a new profile</p>
+          </div>
+
+          <!-- Auth Tabs: Sign In vs Create Account -->
+          <div class="auth-tabs" role="tablist" aria-label="Sign In or Register">
+            <button type="button" id="tab-signin-btn" class="auth-tab active" role="tab" aria-selected="true" aria-controls="signin-form-wrapper">
+              Sign In
+            </button>
+            <button type="button" id="tab-register-btn" class="auth-tab" role="tab" aria-selected="false" aria-controls="register-form-wrapper">
+              Create Account
+            </button>
+          </div>
+
+          <!-- Inline Feedback Alert -->
+          <div id="auth-feedback" class="auth-feedback" style="display: none;" role="alert"></div>
+
+          <!-- Tab 1: Sign In Form -->
+          <div id="signin-form-wrapper" class="auth-tab-content active" role="tabpanel">
+            <form id="signin-form" class="auth-form" novalidate>
+              <div class="form-group">
+                <label for="signin-username" class="form-label">Username</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">👤</span>
+                  <input 
+                    type="text" 
+                    id="signin-username" 
+                    name="username" 
+                    class="form-input" 
+                    placeholder="Enter your username" 
+                    autocomplete="username" 
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="signin-password" class="form-label">Password</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">🔒</span>
+                  <input 
+                    type="password" 
+                    id="signin-password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="Enter your password" 
+                    autocomplete="current-password" 
+                    required
+                  >
+                  <button type="button" class="btn-toggle-password" data-target="signin-password" aria-label="Show password">👁️</button>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" id="signin-submit-btn" class="btn btn-primary btn-block btn-lg">
+                  <span>Sign In</span>
+                </button>
+              </div>
+
+              <p class="auth-switch-text">
+                Don't have an account? 
+                <button type="button" id="switch-to-register-link" class="link-btn">Create one for free</button>
+              </p>
+            </form>
+          </div>
+
+          <!-- Tab 2: Create Account Form -->
+          <div id="register-form-wrapper" class="auth-tab-content" role="tabpanel" style="display: none;">
+            <form id="register-form" class="auth-form" novalidate>
+              <div class="form-group">
+                <label for="register-username" class="form-label">Choose a Username <span class="required-asterisk">*</span></label>
+                <div class="input-with-icon">
+                  <span class="input-icon">👤</span>
+                  <input 
+                    type="text" 
+                    id="register-username" 
+                    name="username" 
+                    class="form-input" 
+                    placeholder="e.g. green_champion" 
+                    autocomplete="username" 
+                    required
+                    minlength="3"
+                    maxlength="30"
+                  >
+                </div>
+                <span class="form-help">3–30 characters (letters, numbers, underscores)</span>
+              </div>
+
+              <div class="form-group">
+                <label for="register-displayname" class="form-label">Your Name (optional)</label>
+                <div class="input-with-icon">
+                  <span class="input-icon">🏷️</span>
+                  <input 
+                    type="text" 
+                    id="register-displayname" 
+                    name="displayName" 
+                    class="form-input" 
+                    placeholder="e.g. Alex Green" 
+                    autocomplete="name"
+                    maxlength="50"
+                  >
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="register-password" class="form-label">Password <span class="required-asterisk">*</span></label>
+                <div class="input-with-icon">
+                  <span class="input-icon">🔒</span>
+                  <input 
+                    type="password" 
+                    id="register-password" 
+                    name="password" 
+                    class="form-input" 
+                    placeholder="At least 6 characters" 
+                    autocomplete="new-password" 
+                    required
+                    minlength="6"
+                  >
+                  <button type="button" class="btn-toggle-password" data-target="register-password" aria-label="Show password">👁️</button>
+                </div>
+                <span class="form-help">Minimum 6 characters</span>
+              </div>
+
+              <div class="form-group">
+                <label for="register-confirm-password" class="form-label">Confirm Password <span class="required-asterisk">*</span></label>
+                <div class="input-with-icon">
+                  <span class="input-icon">🔒</span>
+                  <input 
+                    type="password" 
+                    id="register-confirm-password" 
+                    name="confirmPassword" 
+                    class="form-input" 
+                    placeholder="Repeat your password" 
+                    autocomplete="new-password" 
+                    required
+                  >
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block btn-lg">
+                  <span>Create Account</span>
+                </button>
+              </div>
+
+              <p class="auth-switch-text">
+                Already have an account? 
+                <button type="button" id="switch-to-signin-link" class="link-btn">Sign in here</button>
+              </p>
+            </form>
+          </div>
+
+          <!-- Guest Explore Option -->
+          <div class="auth-guest-divider">
+            <span>or</span>
+          </div>
+          <button type="button" id="guest-continue-btn" class="btn btn-outline btn-block">
+            <span>Continue as Guest</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       2. Main EcoTrack Application (Revealed when Signed In or Guest Mode)
+       ========================================================================= -->
+  <div id="app-view" class="app-view" style="display: none;">
+    <!-- Header & Navigation -->
+    <header class="app-header">
     <div class="header-container">
       <a href="#home" class="brand-link" aria-label="EcoTrack Home">
         <span class="brand-icon">
@@ -471,166 +690,8 @@
         </p>
       </div>
     </div>
-  <!-- User Authentication Modal (Sign In / Create Account) -->
-  <div id="auth-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="auth-modal-title">
-    <div class="modal-box auth-modal-box">
-      <div class="modal-header auth-modal-header">
-        <div class="auth-title-group">
-          <span class="auth-header-icon">🌿</span>
-          <h3 id="auth-modal-title" class="modal-title">EcoTrack Account</h3>
-        </div>
-        <button type="button" id="close-auth-modal-btn" class="modal-close-btn" aria-label="Close dialog">&times;</button>
-      </div>
-
-      <!-- Auth Tabs: Sign In vs Create Account -->
-      <div class="auth-tabs" role="tablist" aria-label="Authentication Options">
-        <button type="button" id="tab-signin-btn" class="auth-tab active" role="tab" aria-selected="true" aria-controls="signin-form-wrapper">
-          Sign In
-        </button>
-        <button type="button" id="tab-register-btn" class="auth-tab" role="tab" aria-selected="false" aria-controls="register-form-wrapper">
-          Create Account
-        </button>
-      </div>
-
-      <!-- Inline Feedback Alert -->
-      <div id="auth-feedback" class="auth-feedback" style="display: none;" role="alert"></div>
-
-      <!-- Tab 1: Sign In Form -->
-      <div id="signin-form-wrapper" class="auth-tab-content active" role="tabpanel">
-        <form id="signin-form" class="auth-form" novalidate>
-          <div class="form-group">
-            <label for="signin-username" class="form-label">Username</label>
-            <div class="input-with-icon">
-              <span class="input-icon">👤</span>
-              <input 
-                type="text" 
-                id="signin-username" 
-                name="username" 
-                class="form-input" 
-                placeholder="Enter your username" 
-                autocomplete="username" 
-                required
-              >
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="signin-password" class="form-label">Password</label>
-            <div class="input-with-icon">
-              <span class="input-icon">🔒</span>
-              <input 
-                type="password" 
-                id="signin-password" 
-                name="password" 
-                class="form-input" 
-                placeholder="Enter your password" 
-                autocomplete="current-password" 
-                required
-              >
-              <button type="button" class="btn-toggle-password" data-target="signin-password" aria-label="Show password">👁️</button>
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" id="signin-submit-btn" class="btn btn-primary btn-block">
-              <span>Sign In</span>
-            </button>
-          </div>
-
-          <p class="auth-switch-text">
-            Don't have an account? 
-            <button type="button" id="switch-to-register-link" class="link-btn">Create one for free</button>
-          </p>
-        </form>
-      </div>
-
-      <!-- Tab 2: Create Account Form -->
-      <div id="register-form-wrapper" class="auth-tab-content" role="tabpanel" style="display: none;">
-        <form id="register-form" class="auth-form" novalidate>
-          <div class="form-group">
-            <label for="register-username" class="form-label">Choose a Username <span class="required-asterisk">*</span></label>
-            <div class="input-with-icon">
-              <span class="input-icon">👤</span>
-              <input 
-                type="text" 
-                id="register-username" 
-                name="username" 
-                class="form-input" 
-                placeholder="e.g. green_hero" 
-                autocomplete="username" 
-                required
-                minlength="3"
-                maxlength="30"
-              >
-            </div>
-            <span class="form-help">3–30 characters (letters, numbers, underscores)</span>
-          </div>
-
-          <div class="form-group">
-            <label for="register-displayname" class="form-label">Your Name (optional)</label>
-            <div class="input-with-icon">
-              <span class="input-icon">🏷️</span>
-              <input 
-                type="text" 
-                id="register-displayname" 
-                name="displayName" 
-                class="form-input" 
-                placeholder="e.g. Alex Green" 
-                autocomplete="name"
-                maxlength="50"
-              >
-            </div>
-          </div>
-
-          <div class="form-group">
-            <label for="register-password" class="form-label">Password <span class="required-asterisk">*</span></label>
-            <div class="input-with-icon">
-              <span class="input-icon">🔒</span>
-              <input 
-                type="password" 
-                id="register-password" 
-                name="password" 
-                class="form-input" 
-                placeholder="At least 6 characters" 
-                autocomplete="new-password" 
-                required
-                minlength="6"
-              >
-              <button type="button" class="btn-toggle-password" data-target="register-password" aria-label="Show password">👁️</button>
-            </div>
-            <span class="form-help">Minimum 6 characters</span>
-          </div>
-
-          <div class="form-group">
-            <label for="register-confirm-password" class="form-label">Confirm Password <span class="required-asterisk">*</span></label>
-            <div class="input-with-icon">
-              <span class="input-icon">🔒</span>
-              <input 
-                type="password" 
-                id="register-confirm-password" 
-                name="confirmPassword" 
-                class="form-input" 
-                placeholder="Repeat your password" 
-                autocomplete="new-password" 
-                required
-              >
-            </div>
-          </div>
-
-          <div class="form-actions">
-            <button type="submit" id="register-submit-btn" class="btn btn-primary btn-block">
-              <span>Create Account</span>
-            </button>
-          </div>
-
-          <p class="auth-switch-text">
-            Already have an account? 
-            <button type="button" id="switch-to-signin-link" class="link-btn">Sign in here</button>
-          </p>
-        </form>
-      </div>
-    </div>
-  </div>
+  </footer>
+  </div><!-- /#app-view -->
 
   <!-- Confirmation Modal for Delete Action -->
   <div id="delete-modal" class="modal-backdrop" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">

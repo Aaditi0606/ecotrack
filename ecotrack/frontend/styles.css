@@ -1509,47 +1509,210 @@ button {
   border-color: rgba(211, 47, 47, 0.2);
 }
 
-/* --- Auth Modal Specific Styles --- */
-.auth-modal-box {
-  max-width: 460px;
-  padding: 2rem;
-  border-radius: var(--radius-xl);
-}
-
-.auth-modal-header {
+/* --- Dedicated Full-Page Auth Gateway Styles (Shown Before Main Page) --- */
+.auth-gate-page {
+  min-height: 100vh;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-bottom: 1.25rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid var(--color-border-subtle);
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  background: 
+    radial-gradient(circle at 12% 18%, rgba(90, 130, 100, 0.12) 0%, transparent 42%),
+    radial-gradient(circle at 88% 82%, rgba(30, 70, 32, 0.08) 0%, transparent 45%),
+    var(--color-bg);
+  position: relative;
+  overflow-x: hidden;
 }
 
-.auth-title-group {
+.auth-gate-wrapper {
+  width: 100%;
+  max-width: 1040px;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 3.5rem;
+  align-items: center;
+  margin: auto;
+}
+
+/* Brand Column */
+.auth-gate-brand-col {
+  display: flex;
+  flex-direction: column;
+  gap: 1.6rem;
+  padding-right: 1rem;
+}
+
+.auth-gate-brand-header {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.brand-badge-icon {
+  width: 54px;
+  height: 54px;
+  border-radius: var(--radius-lg);
+  background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  justify-content: center;
+  font-size: 1.8rem;
+  box-shadow: 0 4px 14px rgba(30, 70, 32, 0.25);
+  margin-bottom: 0.5rem;
 }
 
-.auth-header-icon {
-  font-size: 1.5rem;
+.auth-gate-title {
+  font-size: 2.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-primary);
+  line-height: 1.1;
 }
 
-.modal-close-btn {
-  background: transparent;
-  border: none;
-  font-size: 1.6rem;
-  line-height: 1;
+.auth-gate-tagline {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-secondary);
+  letter-spacing: -0.01em;
+}
+
+.auth-gate-description {
+  font-size: 1.02rem;
   color: var(--color-text-muted);
-  cursor: pointer;
-  padding: 0.2rem 0.4rem;
-  border-radius: var(--radius-sm);
-  transition: color var(--transition-fast);
+  line-height: 1.65;
+  max-width: 480px;
 }
 
-.modal-close-btn:hover {
+.auth-gate-features {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+}
+
+.auth-feature-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.95rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast), border-color var(--transition-fast);
+}
+
+.auth-feature-card:hover {
+  transform: translateY(-2px);
+  border-color: var(--color-secondary);
+}
+
+.auth-feature-emoji {
+  font-size: 1.35rem;
+  line-height: 1;
+  padding: 0.35rem;
+  background: var(--color-primary-light);
+  border-radius: var(--radius-sm);
+}
+
+.auth-feature-title {
+  display: block;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: var(--color-text);
-  background-color: var(--color-bg-subtle);
+  margin-bottom: 0.15rem;
+}
+
+.auth-feature-desc {
+  font-size: 0.82rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+  margin: 0;
+}
+
+.auth-gate-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: var(--radius-pill);
+  background: var(--color-primary-light);
+  border: 1px solid rgba(46, 125, 50, 0.2);
+  color: var(--color-primary);
+  font-size: 0.82rem;
+  font-weight: 700;
+  width: fit-content;
+}
+
+.status-live-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #2E7D32;
+  box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.25);
+  animation: pulse-dot 2s infinite ease-in-out;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0.5); }
+  70% { transform: scale(1.1); box-shadow: 0 0 0 6px rgba(46, 125, 50, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(46, 125, 50, 0); }
+}
+
+/* Right Form Card Box */
+.auth-card-box {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  padding: 2.25rem 2rem;
+  box-shadow: var(--shadow-card), 0 12px 32px rgba(31, 36, 33, 0.06);
+  position: relative;
+}
+
+.auth-card-header {
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.auth-card-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--color-text);
+  margin-bottom: 0.35rem;
+}
+
+.auth-card-desc {
+  font-size: 0.88rem;
+  color: var(--color-text-muted);
+}
+
+.auth-guest-divider {
+  display: flex;
+  align-items: center;
+  text-align: center;
+  margin: 1.35rem 0 1rem;
+}
+
+.auth-guest-divider::before,
+.auth-guest-divider::after {
+  content: '';
+  flex: 1;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.auth-guest-divider span {
+  padding: 0 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-text-light);
+}
+
+.app-view {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
 }
 
 .auth-tabs {
@@ -1779,5 +1942,54 @@ button {
     flex-direction: column;
     align-items: flex-start;
     gap: 0.8rem;
+  }
+
+  /* Auth Gate Mobile */
+  .auth-gate-page {
+    padding: 2rem 1rem;
+  }
+
+  .auth-card-box {
+    padding: 1.5rem 1.2rem;
+  }
+
+  .auth-gate-title {
+    font-size: 1.95rem;
+  }
+}
+
+/* Tablet (max-width: 992px) Auth Gate Adjustments */
+@media (max-width: 992px) {
+  .auth-gate-wrapper {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+    max-width: 500px;
+  }
+
+  .auth-gate-brand-col {
+    text-align: center;
+    align-items: center;
+    padding-right: 0;
+  }
+
+  .brand-badge-icon {
+    margin: 0 auto 0.5rem;
+  }
+
+  .auth-gate-title {
+    font-size: 2.25rem;
+  }
+
+  .auth-gate-description {
+    max-width: 100%;
+  }
+
+  .auth-gate-features {
+    text-align: left;
+    width: 100%;
+  }
+
+  .auth-gate-status-pill {
+    margin: 0 auto;
   }
 }

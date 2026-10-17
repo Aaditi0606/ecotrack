@@ -120,9 +120,13 @@ const userAvatarInitials = document.getElementById('user-avatar-initials') as HT
 const userDisplayName = document.getElementById('user-display-name') as HTMLElement | null;
 const signoutBtn = document.getElementById('signout-btn') as HTMLButtonElement | null;
 
-// Auth Modal Elements
-const authModal = document.getElementById('auth-modal') as HTMLElement | null;
-const closeAuthModalBtn = document.getElementById('close-auth-modal-btn') as HTMLButtonElement | null;
+// Auth Gate & App View Elements
+const authGateView = document.getElementById('auth-gate-view') as HTMLElement | null;
+const appView = document.getElementById('app-view') as HTMLElement | null;
+const guestContinueBtn = document.getElementById('guest-continue-btn') as HTMLButtonElement | null;
+const authGateHeading = document.getElementById('auth-gate-heading') as HTMLElement | null;
+const authGateSubheading = document.getElementById('auth-gate-subheading') as HTMLElement | null;
+
 const tabSigninBtn = document.getElementById('tab-signin-btn') as HTMLButtonElement | null;
 const tabRegisterBtn = document.getElementById('tab-register-btn') as HTMLButtonElement | null;
 const authFeedback = document.getElementById('auth-feedback') as HTMLDivElement | null;
@@ -650,28 +654,28 @@ function initNavigation(): void {
   }
 }
 
-// --- Authentication Management ---
+// --- Authentication & View State Management ---
 
-function openAuthModal(initialTab: 'signin' | 'register' = 'signin'): void {
-  switchAuthTab(initialTab);
-  clearAuthFeedback();
-  if (authModal) {
-    authModal.classList.add('active');
-    authModal.setAttribute('aria-hidden', 'false');
-    if (initialTab === 'signin') {
-      signinUsername?.focus();
-    } else {
-      registerUsername?.focus();
-    }
+function showAuthView(tab: 'signin' | 'register' = 'signin'): void {
+  if (authGateView) {
+    authGateView.style.display = 'flex';
   }
+  if (appView) {
+    appView.style.display = 'none';
+  }
+  switchAuthTab(tab);
+  clearAuthFeedback();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
-function closeAuthModal(): void {
-  if (authModal) {
-    authModal.classList.remove('active');
-    authModal.setAttribute('aria-hidden', 'true');
+function showAppView(): void {
+  if (authGateView) {
+    authGateView.style.display = 'none';
   }
-  clearAuthFeedback();
+  if (appView) {
+    appView.style.display = 'block';
+  }
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function switchAuthTab(tab: 'signin' | 'register'): void {
@@ -684,6 +688,10 @@ function switchAuthTab(tab: 'signin' | 'register'): void {
 
     if (signinFormWrapper) signinFormWrapper.style.display = 'block';
     if (registerFormWrapper) registerFormWrapper.style.display = 'none';
+
+    if (authGateHeading) authGateHeading.textContent = 'Welcome Back';
+    if (authGateSubheading) authGateSubheading.textContent = 'Sign in to access your personal dashboard & saved activities';
+    signinUsername?.focus();
   } else {
     tabRegisterBtn?.classList.add('active');
     tabRegisterBtn?.setAttribute('aria-selected', 'true');
@@ -692,6 +700,10 @@ function switchAuthTab(tab: 'signin' | 'register'): void {
 
     if (signinFormWrapper) signinFormWrapper.style.display = 'none';
     if (registerFormWrapper) registerFormWrapper.style.display = 'block';
+
+    if (authGateHeading) authGateHeading.textContent = 'Create an Account';
+    if (authGateSubheading) authGateSubheading.textContent = 'Join EcoTrack and track your personal sustainability journey';
+    registerUsername?.focus();
   }
 }
 
@@ -745,7 +757,7 @@ async function handleSignIn(e: Event): Promise<void> {
     }
 
     setSession(data.token, data.user);
-    closeAuthModal();
+    showAppView();
     if (signinForm) signinForm.reset();
     showToast(`Welcome back, ${data.user.displayName || data.user.username}!`, 'success');
     await loadDashboard();
@@ -805,7 +817,7 @@ async function handleRegister(e: Event): Promise<void> {
     }
 
     setSession(data.token, data.user);
-    closeAuthModal();
+    showAppView();
     if (registerForm) registerForm.reset();
     showToast(`Account created! Welcome to EcoTrack, ${data.user.displayName || data.user.username}!`, 'success');
     await loadDashboard();
@@ -839,6 +851,7 @@ function handleSignOut(): void {
     localStorage.removeItem(AUTH_USER_KEY);
   } catch { }
   updateAuthUI();
+  showAuthView('signin');
   showToast('You have been signed out.', 'info');
   loadDashboard();
 }
@@ -866,6 +879,7 @@ function initSession(): void {
       authToken = savedToken;
       currentUser = JSON.parse(savedUser);
       updateAuthUI();
+      showAppView();
 
       // Verify token in background
       fetch('/api/auth/me', {
@@ -878,13 +892,17 @@ function initSession(): void {
           localStorage.removeItem(AUTH_TOKEN_KEY);
           localStorage.removeItem(AUTH_USER_KEY);
           updateAuthUI();
+          showAuthView('signin');
+          showToast('Session expired. Please sign in again.', 'info');
         }
       }).catch(() => { });
     } else {
       updateAuthUI();
+      showAuthView('signin');
     }
   } catch {
     updateAuthUI();
+    showAuthView('signin');
   }
 }
 
@@ -943,21 +961,14 @@ function init(): void {
     });
   }
 
-  // 7. Auth Modal & Form Listeners
+  // 7. Auth Gate & Form Listeners
   if (openAuthBtn) {
-    openAuthBtn.addEventListener('click', () => openAuthModal('signin'));
+    openAuthBtn.addEventListener('click', () => showAuthView('signin'));
   }
-  if (closeAuthModalBtn) {
-    closeAuthModalBtn.addEventListener('click', closeAuthModal);
-  }
-  if (authModal) {
-    authModal.addEventListener('click', (e) => {
-      if (e.target === authModal) closeAuthModal();
-    });
-    window.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && authModal.classList.contains('active')) {
-        closeAuthModal();
-      }
+  if (guestContinueBtn) {
+    guestContinueBtn.addEventListener('click', () => {
+      showAppView();
+      showToast('Browsing as guest. You can sign in anytime to link your activities.', 'info');
     });
   }
 

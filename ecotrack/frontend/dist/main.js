@@ -100,9 +100,12 @@ const userProfileBadge = document.getElementById('user-profile-badge');
 const userAvatarInitials = document.getElementById('user-avatar-initials');
 const userDisplayName = document.getElementById('user-display-name');
 const signoutBtn = document.getElementById('signout-btn');
-// Auth Modal Elements
-const authModal = document.getElementById('auth-modal');
-const closeAuthModalBtn = document.getElementById('close-auth-modal-btn');
+// Auth Gate & App View Elements
+const authGateView = document.getElementById('auth-gate-view');
+const appView = document.getElementById('app-view');
+const guestContinueBtn = document.getElementById('guest-continue-btn');
+const authGateHeading = document.getElementById('auth-gate-heading');
+const authGateSubheading = document.getElementById('auth-gate-subheading');
 const tabSigninBtn = document.getElementById('tab-signin-btn');
 const tabRegisterBtn = document.getElementById('tab-register-btn');
 const authFeedback = document.getElementById('auth-feedback');
@@ -579,27 +582,26 @@ function initNavigation() {
         });
     }
 }
-// --- Authentication Management ---
-function openAuthModal(initialTab = 'signin') {
-    switchAuthTab(initialTab);
-    clearAuthFeedback();
-    if (authModal) {
-        authModal.classList.add('active');
-        authModal.setAttribute('aria-hidden', 'false');
-        if (initialTab === 'signin') {
-            signinUsername?.focus();
-        }
-        else {
-            registerUsername?.focus();
-        }
+// --- Authentication & View State Management ---
+function showAuthView(tab = 'signin') {
+    if (authGateView) {
+        authGateView.style.display = 'flex';
     }
+    if (appView) {
+        appView.style.display = 'none';
+    }
+    switchAuthTab(tab);
+    clearAuthFeedback();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
-function closeAuthModal() {
-    if (authModal) {
-        authModal.classList.remove('active');
-        authModal.setAttribute('aria-hidden', 'true');
+function showAppView() {
+    if (authGateView) {
+        authGateView.style.display = 'none';
     }
-    clearAuthFeedback();
+    if (appView) {
+        appView.style.display = 'block';
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function switchAuthTab(tab) {
     clearAuthFeedback();
@@ -612,6 +614,11 @@ function switchAuthTab(tab) {
             signinFormWrapper.style.display = 'block';
         if (registerFormWrapper)
             registerFormWrapper.style.display = 'none';
+        if (authGateHeading)
+            authGateHeading.textContent = 'Welcome Back';
+        if (authGateSubheading)
+            authGateSubheading.textContent = 'Sign in to access your personal dashboard & saved activities';
+        signinUsername?.focus();
     }
     else {
         tabRegisterBtn?.classList.add('active');
@@ -622,6 +629,11 @@ function switchAuthTab(tab) {
             signinFormWrapper.style.display = 'none';
         if (registerFormWrapper)
             registerFormWrapper.style.display = 'block';
+        if (authGateHeading)
+            authGateHeading.textContent = 'Create an Account';
+        if (authGateSubheading)
+            authGateSubheading.textContent = 'Join EcoTrack and track your personal sustainability journey';
+        registerUsername?.focus();
     }
 }
 function displayAuthFeedback(msg, type = 'error') {
@@ -669,7 +681,7 @@ async function handleSignIn(e) {
             throw new Error(data.error || 'Failed to sign in.');
         }
         setSession(data.token, data.user);
-        closeAuthModal();
+        showAppView();
         if (signinForm)
             signinForm.reset();
         showToast(`Welcome back, ${data.user.displayName || data.user.username}!`, 'success');
@@ -726,7 +738,7 @@ async function handleRegister(e) {
             throw new Error(data.error || 'Failed to create account.');
         }
         setSession(data.token, data.user);
-        closeAuthModal();
+        showAppView();
         if (registerForm)
             registerForm.reset();
         showToast(`Account created! Welcome to EcoTrack, ${data.user.displayName || data.user.username}!`, 'success');
@@ -763,6 +775,7 @@ function handleSignOut() {
     }
     catch { }
     updateAuthUI();
+    showAuthView('signin');
     showToast('You have been signed out.', 'info');
     loadDashboard();
 }
@@ -794,6 +807,7 @@ function initSession() {
             authToken = savedToken;
             currentUser = JSON.parse(savedUser);
             updateAuthUI();
+            showAppView();
             // Verify token in background
             fetch('/api/auth/me', {
                 headers: { 'Authorization': `Bearer ${savedToken}` }
@@ -805,15 +819,19 @@ function initSession() {
                     localStorage.removeItem(AUTH_TOKEN_KEY);
                     localStorage.removeItem(AUTH_USER_KEY);
                     updateAuthUI();
+                    showAuthView('signin');
+                    showToast('Session expired. Please sign in again.', 'info');
                 }
             }).catch(() => { });
         }
         else {
             updateAuthUI();
+            showAuthView('signin');
         }
     }
     catch {
         updateAuthUI();
+        showAuthView('signin');
     }
 }
 // --- Application Initialization ---
@@ -866,22 +884,14 @@ function init() {
             }
         });
     }
-    // 7. Auth Modal & Form Listeners
+    // 7. Auth Gate & Form Listeners
     if (openAuthBtn) {
-        openAuthBtn.addEventListener('click', () => openAuthModal('signin'));
+        openAuthBtn.addEventListener('click', () => showAuthView('signin'));
     }
-    if (closeAuthModalBtn) {
-        closeAuthModalBtn.addEventListener('click', closeAuthModal);
-    }
-    if (authModal) {
-        authModal.addEventListener('click', (e) => {
-            if (e.target === authModal)
-                closeAuthModal();
-        });
-        window.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && authModal.classList.contains('active')) {
-                closeAuthModal();
-            }
+    if (guestContinueBtn) {
+        guestContinueBtn.addEventListener('click', () => {
+            showAppView();
+            showToast('Browsing as guest. You can sign in anytime to link your activities.', 'info');
         });
     }
     tabSigninBtn?.addEventListener('click', () => switchAuthTab('signin'));
