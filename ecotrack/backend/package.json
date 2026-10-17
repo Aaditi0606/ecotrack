@@ -5,6 +5,7 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
+    "build": "npx -y typescript --project ../frontend/tsconfig.json",
     "dev": "node --watch server.js",
     "migrate": "node migrate.js",
     "test": "node test-api.js"
@@ -22,7 +23,8 @@
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
-    "mongoose": "^8.9.5"
+    "mongoose": "^8.9.5",
+    "typescript": "^5.7.3"
   },
   "devDependencies": {
     "mongodb-memory-server": "^10.1.3"

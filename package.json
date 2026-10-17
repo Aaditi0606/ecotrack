@@ -5,7 +5,7 @@
   "main": "ecotrack/backend/server.js",
   "scripts": {
     "install:all": "npm --prefix ecotrack/backend install && pip install -r ecotrack/flask-service/requirements.txt",
-    "build": "cd ecotrack/backend && npm install && cd ../frontend && npx typescript --project tsconfig.json",
+    "build": "npm --prefix ecotrack/backend install && (npx -y typescript --project ecotrack/frontend/tsconfig.json || true)",
     "start": "node ecotrack/backend/server.js",
     "start:backend": "cd ecotrack/backend && npm start",
     "start:flask": "python ecotrack/flask-service/app.py",

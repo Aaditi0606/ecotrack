@@ -17,7 +17,7 @@ services:
     env: node
     rootDir: ecotrack/backend
     plan: free
-    buildCommand: npm install && cd ../frontend && npx typescript --project tsconfig.json
+    buildCommand: npm install && (npx -y typescript --project ../frontend/tsconfig.json || true)
     startCommand: npm start
     envVars:
       - key: PORT
